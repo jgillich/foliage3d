@@ -16,6 +16,9 @@ signal graph_changed()
 		graph.changed.connect(queue_gen)
 		graph_changed.emit()
 
+# region>mesh>transform
+@export var generated: Dictionary[Vector2i, Dictionary] = {}
+
 var terrain: Terrain3D
 var timer: SceneTreeTimer
 var num_timer: int
@@ -51,6 +54,33 @@ func queue_gen():
 	)
 
 func gen():
+	# https://terrain3d.readthedocs.io/en/latest/api/class_terrain3dregion.html#class-terrain3dregion-property-instances
+	var regions := terrain.data.get_regions_all()
+
+
+	for region in regions:
+		#TODO we get spammed with "Empty cell in region" if we don't always clear them, why?
+		#if not generated.has(region):
+			#continue
+		var instances = regions[region].get_instances()
+		for mesh in instances.keys():
+			#if not generated[region].has(mesh):
+				#continue
+			var cells = instances[mesh]
+			for cell in cells.keys():
+				var arr = cells[cell]
+				var xforms = arr[0]
+				instances[mesh][cell][0] = xforms.filter(func(xform: Transform3D):
+					if not generated.has(region) or not generated[region].has(mesh):
+						return true
+					return not generated[region][mesh].has(xform)
+				)
+				if instances[mesh][cell][0].is_empty():
+					instances[mesh].erase(cell)
+
+	generated = {}
+	terrain.instancer.force_update_mmis()
+
 	var nodes: Array[FoliageNode]
 	for n in graph.nodes:
 		var node = FoliageNode.deserialize(n)
@@ -88,3 +118,7 @@ func get_inputs(nodes: Array[FoliageNode], node: FoliageNode) -> Variant:
 		inputs[connection["to_port"]] = from[0].result[connection["from_port"]]
 
 	return inputs
+
+func _validate_property(property: Dictionary):
+	if property.name in ["generated"]:
+		property.usage = PROPERTY_USAGE_NO_EDITOR

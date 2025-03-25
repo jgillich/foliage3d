@@ -12,7 +12,7 @@ var ports: Array[Port]
 signal port_value_changed()
 
 static func nodes() -> Array:
-	return [FoliageSurfaceSampler, FoliageMesh, FoliageMeshID, FoliageSplit, FoliageTransform]
+	return [FoliageSurfaceSampler, FoliageMeshID, FoliageSplit, FoliageTransform]
 
 static func deserialize(dict: Dictionary) -> FoliageNode:
 	for n in nodes():
@@ -37,6 +37,33 @@ func _init(props: Dictionary = {}) -> void:
 				color = Color.BLUE
 		set_slot(i, port.input, port.type, color, port.output,  port.type, color)
 		add_child(port.get_control(self))
+
+func add_transforms(mesh: int, xforms: Array[Transform3D]):
+	if mesh >= foliage.terrain.assets.get_mesh_count():
+		push_warning("foliage: mesh %d out of range" % mesh)
+		return
+	var dict: Dictionary = {}
+	var asset := foliage.terrain.assets.get_mesh_asset(mesh)
+	for i in range(xforms.size()):
+		var xform = xforms[i]
+		xform.origin += xform.basis.y * asset.height_offset
+		var loc := foliage.terrain.data.get_region_location(xform.origin)
+		var region: Array[Transform3D] = dict.get_or_add(loc, [] as Array[Transform3D])
+		region.append(xform)
+		xforms[i] = xform
+
+	for loc in dict.keys():
+		var colors: PackedColorArray = []
+		colors.resize(dict[loc].size())
+		colors.fill(Color.WHITE)
+
+		var region = foliage.terrain.data.get_region(loc)
+		var global_local_offset = Vector3(loc.x, 0, loc.y) * region.region_size * foliage.terrain.vertex_spacing
+		for i in range(dict[loc].size()):
+			dict[loc][i].origin -= global_local_offset
+			foliage.generated.get_or_add(loc, {}).get_or_add(mesh, []).append(dict[loc][i])
+
+		foliage.terrain.instancer.append_region(region, mesh, dict[loc], colors)
 
 func serialize() -> Dictionary:
 	var dict = {
@@ -64,40 +91,6 @@ func create_port(prop: String, name: String, type: Type, input: bool = false, ou
 
 static func node_name():
 	return ""
-
-#
-#func create_connection_row(left_label: String, right_label: String) -> Control:
-	#var hbox = HBoxContainer.new()
-	#var label = Label.new()
-	#label.text = left_label
-	#hbox.add_child(label)
-	#label = label.duplicate()
-	#label.text = right_label
-	#hbox.add_child(label)
-	#return hbox
-#
-#func create_float_row(label: String, value_changed: Callable, step = 0.01, min_value = 0.01) -> Control:
-	#var hbox = HBoxContainer.new()
-	#var lbl = Label.new()
-	#lbl.text = label
-	#hbox.add_child(lbl)
-	#var spin = SpinBox.new()
-	#spin.value = 1
-	#spin.step = step
-	#spin.min_value = min_value
-	#spin.value_changed.connect(value_changed)
-	#hbox.add_child(spin)
-	#return hbox
-#
-#func create_int_row(label: String, value_changed: Callable) -> Control:
-	#var hbox = HBoxContainer.new()
-	#var lbl = Label.new()
-	#lbl.text = label
-	#hbox.add_child(lbl)
-	#var spin = SpinBox.new()
-	#spin.value_changed.connect(func(v: float): value_changed.call(int(v)))
-	#hbox.add_child(spin)
-	#return hbox
 
 class Port:
 	var prop: String

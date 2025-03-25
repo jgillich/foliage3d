@@ -11,9 +11,17 @@ func _init(props: Dictionary = {}) -> void:
 
 func gen(transforms: Array[Transform3D]):
 	print_debug("adding meshes ", transforms.size())
-	foliage.terrain.instancer.force_update_mmis()
-	foliage.terrain.instancer.clear_by_mesh(id)
-	foliage.terrain.instancer.add_transforms(id, transforms)
+
+
+	#foliage.terrain.instancer.clear_by_mesh(id)
+	# added_transforms[region][mesh][cell] = []
+	#for xform in transforms:
+	#	var region = foliage.terrain.data.get_region(xform.origin)
+
+	#foliage.terrain.instancer.append_region()
+
+
+	add_transforms(id, transforms)
 
 static func node_name():
 	return "MeshID"

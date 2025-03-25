@@ -88,5 +88,4 @@ func _on_disconnection_request(from_node: StringName, from_port: int, to_node: S
 	save()
 
 func _show_add_node_popup(click_position: Vector2i) -> void:
-	#node_popup.position = get_global_mouse_position()
 	node_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), node_popup.size))
