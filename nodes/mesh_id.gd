@@ -11,7 +11,6 @@ func _init(props: Dictionary = {}) -> void:
 
 func gen(transforms: Array[Transform3D]):
 	print_debug("adding meshes ", transforms.size())
-	foliage.terrain.pos
 	foliage.terrain.instancer.force_update_mmis()
 	foliage.terrain.instancer.clear_by_mesh(id)
 	foliage.terrain.instancer.add_transforms(id, transforms)
