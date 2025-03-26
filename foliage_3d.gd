@@ -9,6 +9,7 @@ signal graph_changed()
 	set(value):
 		shape = value
 		debug_mesh.mesh = shape.get_debug_mesh()
+		queue_gen()
 
 @export var graph: FoliageGraph:
 	set(value):
@@ -137,8 +138,9 @@ func get_inputs(nodes: Array[FoliageNode], node: FoliageNode) -> Variant:
 			if result == null:
 				return null
 			if result.size() <= connection["from_port"]:
-				push_error("foliage: missing output on %s" % from[0].node_name())
-				return null
+				push_error("foliage: missing output on %s " % from[0].node_name())
+				inputs[i].append_array([])
+				continue
 
 			inputs[i].append_array(result[connection["from_port"]])
 

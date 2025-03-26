@@ -5,7 +5,7 @@ var foliage: Foliage3D
 var result: Variant = null
 var _name: String = ""
 
-enum Type { POINT, VECTOR3, FLOAT, INT, BOOL, SCENE }
+enum Type { POINT, VECTOR3, FLOAT, INT, BOOL, STRING }
 
 var ports: Array[Port]
 
@@ -17,11 +17,12 @@ static func nodes() -> Array:
 		FoliageMeshID,
 		FoliageSplit,
 		FoliageTransform,
-		#FoliageDensity
+		FoliageDensityFilter,
 		FoliageDifference,
 		FoliagePrune,
 		FoliageSize,
-		FoliageAlign,
+		#FoliageAlign,
+		FoliageFilter,
 	]
 
 static func deserialize(dict: Dictionary) -> FoliageNode:
@@ -89,7 +90,7 @@ func serialize() -> Dictionary:
 
 	return dict
 
-func create_port(prop: String, name: String, type: Type, input: bool = false, output: bool = false, min: Variant = null, max: Variant = null):
+func create_port(prop: String, name: String, type: Type, input: bool = false, output: bool = false, min: Variant = null, max: Variant = null, step: Variant = null):
 	var port = Port.new()
 	port.prop = prop
 	port.name = name
@@ -111,6 +112,7 @@ class Port:
 	var output: bool
 	var min: Variant
 	var max: Variant
+	var step: Variant
 
 	func get_control(node: FoliageNode):
 		var vbox = VBoxContainer.new()
@@ -131,6 +133,15 @@ class Port:
 			row1.add_child(label)
 
 			match type:
+				Type.STRING:
+					var l = LineEdit.new()
+					l.text = node.get(prop)
+					l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					l.text_changed.connect(func(v: String):
+						node.set(prop, v)
+						node.port_value_changed.emit()
+					)
+					row1.add_child(l)
 				Type.BOOL:
 					var v = CheckBox.new()
 					v.button_pressed = node.get(prop)
@@ -165,6 +176,10 @@ class Port:
 					if max != null:
 						v.max_value = max
 					v.step = 0.01
+					if step != null:
+						v.step = step
+					elif min != null and min < v.step:
+						v.step = min
 					v.value_changed.connect(func(v: float):
 						node.set(prop, v)
 						node.port_value_changed.emit()
@@ -215,6 +230,8 @@ class Port:
 		if output:
 			var label = Label.new()
 			label.text = "Out"
+			if not name.is_empty():
+				label.text = name
 			label.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND_FILL
 			row1.add_child(label)
 

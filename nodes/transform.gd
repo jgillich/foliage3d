@@ -5,6 +5,7 @@ var offset_min: Vector3
 var offset_max: Vector3
 var rotation_min: Vector3
 var rotation_max: Vector3
+var rotation_absolute: bool
 var scale_min: Vector3 = Vector3(1, 1, 1)
 var scale_max: Vector3 = Vector3(1, 1, 1)
 var scale_uniform: bool = true
@@ -17,9 +18,10 @@ func _init(props: Dictionary = {}) -> void:
 	create_port("offset_max", "Offset Max", Type.VECTOR3, false, false)
 	create_port("rotation_min", "Rotation Min", Type.VECTOR3, false, false)
 	create_port("rotation_max", "Rotation Max", Type.VECTOR3, false, false)
+	create_port("rotation_absolute", "Absolute Rotation", Type.BOOL, false, false)
 	create_port("scale_min", "Scale Min", Type.VECTOR3, false, false)
 	create_port("scale_max", "Scale Max", Type.VECTOR3, false, false)
-	create_port("scale_uniform", "Scale Uniform", Type.BOOL, false, false)
+	create_port("scale_uniform", "Uniform Scale", Type.BOOL, false, false)
 
 	create_port("seed", "Seed", Type.INT, false, false)
 	super(props)
@@ -38,9 +40,11 @@ func gen(points: Array[Foliage3DPoint] = []) -> Array:
 			transform.origin.z += rng.randf_range(offset_min.z, offset_max.z)
 			result[i].transform = transform
 
-	if rotation_min != Vector3.ZERO or rotation_max != Vector3.ZERO:
+	if rotation_min != Vector3.ZERO or rotation_max != Vector3.ZERO or rotation_absolute:
 		for i in range(result.size()):
 			var transform = result[i].transform
+			if rotation_absolute:
+				transform.basis = Basis()
 			transform.basis = transform.basis.rotated(Vector3(1, 0, 0), deg_to_rad(rng.randf_range(rotation_min.x, rotation_max.x)))
 			transform.basis = transform.basis.rotated(Vector3(0, 1, 0), deg_to_rad(rng.randf_range(rotation_min.y, rotation_max.y)))
 			transform.basis = transform.basis.rotated(Vector3(0, 0, 1), deg_to_rad(rng.randf_range(rotation_min.z, rotation_max.z)))

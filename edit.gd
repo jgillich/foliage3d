@@ -60,6 +60,9 @@ func _on_graph_changed():
 			remove_child(child)
 	for node in foliage.graph.nodes:
 		var fn = FoliageNode.deserialize(node)
+		if fn == null:
+			push_error("foliage: failed to deserialize ", node)
+			continue
 		fn.port_value_changed.connect(save)
 		add_child(fn)
 	for connection in foliage.graph.connections:

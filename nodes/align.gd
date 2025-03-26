@@ -11,8 +11,6 @@ func _init(props: Dictionary = {}) -> void:
 	create_port("align_normal", "Align Normal", Type.BOOL, false, false)
 	super(props)
 
-# TODO aligning twice produces bad results, this node probably shouldn't exist
-# check pcg
 func gen(input: Array[Foliage3DPoint]) -> Array:
 	var points: Array[Foliage3DPoint] = input.duplicate()
 
@@ -27,6 +25,7 @@ func gen(input: Array[Foliage3DPoint]) -> Array:
 			var normal = foliage.terrain.data.get_normal(transform.origin)
 			transform.basis.y = normal
 			transform.basis.z = -transform.basis.z.cross(normal)
+			transform.basis.x = -transform.basis.x.cross(normal)
 			transform.basis = transform.basis.orthonormalized().scaled(scale)
 			points[i].transform = transform
 
