@@ -14,16 +14,6 @@ var foliage: Foliage3D:
 			_on_graph_changed()
 			foliage.graph_changed.connect(_on_graph_changed)
 
-#func _init():
-	#resource = res
-
-
-	#print(graph.nodes[0].density)
-	#var node = FoliageSurfaceSampler.new()
-	#node.density = 1000
-	#graph.nodes.append(node)
-	#ResourceSaver.save(graph, graph.resource_path)
-
 func _ready():
 	add_child(node_popup)
 	node_popup.node_created.connect(_on_node_created)
@@ -65,12 +55,19 @@ func _on_graph_changed():
 			continue
 		fn.port_value_changed.connect(save)
 		add_child(fn)
+
 	for connection in foliage.graph.connections:
-		connect_node(connection["from_node"], connection["from_port"], connection["to_node"], connection["to_port"])
+		connection["from_node"] = connection["from_node"].validate_node_name()
+		connection["to_node"] = connection["to_node"].validate_node_name()
+		var err = connect_node(connection["from_node"], connection["from_port"], connection["to_node"], connection["to_port"])
+		if err != OK:
+			push_error("foliage: connect_node error %d" % err)
+
 	queue_redraw()
 
-func _on_node_created(node: FoliageNode):
+func _on_node_created(node: FoliageNode, node_offset: Vector2):
 	node.port_value_changed.connect(save)
+	node.position_offset = node_offset
 	add_child(node)
 	save()
 
@@ -90,4 +87,5 @@ func _on_disconnection_request(from_node: StringName, from_port: int, to_node: S
 	save()
 
 func _show_add_node_popup(click_position: Vector2i) -> void:
+	node_popup.node_position = (get_local_mouse_position() + scroll_offset) / zoom
 	node_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), node_popup.size))

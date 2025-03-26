@@ -79,7 +79,7 @@ func add_transforms(mesh: int, xforms: Array[Transform3D]):
 func serialize() -> Dictionary:
 	var dict = {
 		"node": title,
-		"name": get_name(),
+		"name": get_name().validate_node_name(),
 		"position_offset": position_offset
 	}
 
@@ -153,13 +153,13 @@ class Port:
 					row1.add_child(v)
 				Type.INT:
 					var v = SpinBox.new()
-					v.value = node.get(prop)
 					v.max_value = 1 << 31
 					if min != null:
 						v.min_value = min
 					if max != null:
 						v.max_value = max
 					v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					v.value = node.get(prop)
 					v.value_changed.connect(func(v: float):
 						node.set(prop, int(v))
 						node.port_value_changed.emit()
@@ -167,7 +167,6 @@ class Port:
 					row1.add_child(v)
 				Type.FLOAT:
 					var v = SpinBox.new()
-					v.value = node.get(prop)
 					v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					v.max_value = 1 << 31
 					v.min_value = -(1 << 31)
@@ -180,6 +179,7 @@ class Port:
 						v.step = step
 					elif min != null and min < v.step:
 						v.step = min
+					v.value = node.get(prop)
 					v.value_changed.connect(func(v: float):
 						node.set(prop, v)
 						node.port_value_changed.emit()
@@ -193,6 +193,15 @@ class Port:
 					y.get_line_edit().add_theme_constant_override("minimum_character_width", 3)
 					z.get_line_edit().add_theme_constant_override("minimum_character_width", 3)
 					var value: Vector3 = node.get(prop)
+					x.max_value = 1 << 31
+					y.max_value = 1 << 31
+					z.max_value = 1 << 31
+					x.min_value = -(1 << 31)
+					y.min_value = -(1 << 31)
+					z.min_value = -(1 << 31)
+					x.step = 0.01
+					y.step = 0.01
+					z.step = 0.01
 					x.value = value.x
 					y.value = value.y
 					z.value = value.z
@@ -214,15 +223,6 @@ class Port:
 					x.alignment = HORIZONTAL_ALIGNMENT_FILL
 					y.alignment = HORIZONTAL_ALIGNMENT_FILL
 					z.alignment = HORIZONTAL_ALIGNMENT_FILL
-					x.max_value = 1 << 31
-					y.max_value = 1 << 31
-					z.max_value = 1 << 31
-					x.min_value = -(1 << 31)
-					y.min_value = -(1 << 31)
-					z.min_value = -(1 << 31)
-					x.step = 0.01
-					y.step = 0.01
-					z.step = 0.01
 					row1.add_child(x)
 					row1.add_child(y)
 					row1.add_child(z)

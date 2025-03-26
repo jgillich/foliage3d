@@ -1,9 +1,10 @@
 @tool
 extends Window
 
-signal node_created()
+signal node_created(FoliageNode, Vector2i)
 
 @onready var tree: Tree = %Tree
+var node_position: Vector2
 
 func _ready() -> void:
 	refresh()
@@ -42,5 +43,5 @@ func _on_item_activated() -> void:
 	var selected = tree.get_selected()
 	if selected == null:
 		return
-	node_created.emit(FoliageNode.nodes()[selected.get_metadata(0)].new())
+	node_created.emit(FoliageNode.nodes()[selected.get_metadata(0)].new(), node_position)
 	hide()

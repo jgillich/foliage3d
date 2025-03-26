@@ -28,9 +28,9 @@ func gen() -> Array:
 			var z = -size.z/2
 			while z < size.z/2:
 				z += spacing/2
-				var offset = Vector3(rng.randf_range(0, spacing/2), 0, rng.randf_range(0, spacing/2))
+				var offset = Vector3(rng.randf_range(-spacing/4, spacing/4), 0, rng.randf_range(-spacing/4, spacing/4))
 				var position = Vector3(x, size.y/2, z) + foliage.global_position
-				points.append(Foliage3DPoint.new(Transform3D(Basis(), position + offset)))
+				points.append(Foliage3DPoint.new(Transform3D(Basis(), position + offset), point_size))
 	elif foliage.shape is SphereShape3D:
 		var radius = foliage.shape.radius
 		var phi = (1 + sqrt(5)) / 2
@@ -38,7 +38,7 @@ func gen() -> Array:
 		for k in range(1, n + 1):
 			var r = sqrt(k - 0.5) / sqrt(n - 1 / 2)
 			var theta = k * 2 * PI / phi ** 2
-			var offset = Vector3(rng.randf_range(0, spacing/2), 0, rng.randf_range(0, spacing/2))
+			var offset = Vector3(rng.randf_range(-spacing/4, spacing/4), 0, rng.randf_range(-spacing/4, spacing/4))
 			var position = offset + Vector3(r * cos(theta), 0, r * sin(theta)) * radius
 			var transform = Transform3D(Basis(), position + foliage.global_position + Vector3(0, radius, 0))
 			points.append(Foliage3DPoint.new(transform, point_size))

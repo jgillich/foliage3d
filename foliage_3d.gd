@@ -23,12 +23,18 @@ signal graph_changed()
 @export var generated: Dictionary[Vector2i, Dictionary] = {}
 
 var terrain: Terrain3D
-var timer: SceneTreeTimer
+var timer: Timer
 var num_timer: int
 
 var debug_mesh: MeshInstance3D = MeshInstance3D.new()
 
 func _enter_tree() -> void:
+	timer = Timer.new()
+	timer.wait_time = 1.0
+	timer.one_shot = true
+	timer.timeout.connect(gen)
+	add_child(timer)
+
 	add_child(debug_mesh)
 	set_notify_transform(true)
 	terrain = get_parent()
@@ -48,13 +54,8 @@ func _get_configuration_warnings():
 	return []
 
 func queue_gen():
-	num_timer += 1
-	timer = get_tree().create_timer(0.5)
-	timer.timeout.connect(func():
-		num_timer -= 1
-		if num_timer == 0:
-			gen()
-	)
+	if timer != null:
+		timer.start()
 
 func gen():
 	# https://terrain3d.readthedocs.io/en/latest/api/class_terrain3dregion.html#class-terrain3dregion-property-instances
@@ -88,30 +89,60 @@ func gen():
 		node.foliage = self
 		nodes.append(node)
 
-	var time = Time.get_ticks_msec()
+	gen_next(nodes, Time.get_ticks_msec())
 
-	while true:
-		if Time.get_ticks_msec() - time > (time_limit*1000):
-			push_warning("foliage: generation time limit exceeded")
-			break
-		var pending: int = 0
-		for node in nodes:
-			if node.result != null:
-				continue
-			var inputs = get_inputs(nodes, node)
-			if inputs == null:
-				pending += 1
-				continue
-			node.result = node.gen.callv(inputs)
-			#node.result = node.gen.bind(inputs).call()
-			if node.result == null:
-				push_error("foliage: node %s returned null " % node.node_name(), inputs)
-				continue
-			if node.result is Array and node.result.size() == 0:
-				push_error("foliage: node %s returned empty " % node.node_name(), inputs)
-				continue
-		if pending == 0:
-			break
+
+func gen_next(nodes: Array[FoliageNode], time: int):
+	var pending: int = 0
+	if Time.get_ticks_msec() - time > (time_limit*1000):
+		push_warning("foliage: generation time limit exceeded")
+		return
+
+	#var threads: Dictionary[FoliageNode, Thread]
+
+	for node in nodes:
+		if node.result != null:
+			continue
+
+		var inputs = get_inputs(nodes, node)
+		if inputs == null:
+			pending += 1
+			continue
+
+		var start_time = Time.get_ticks_msec()
+		node.result = node.gen.callv(inputs)
+		if node.result == null:
+			push_error("foliage: node %s returned null" % node.node_name())
+			return
+		elif node.result is Array and node.result.size() == 0:
+			push_error("foliage: node %s returned empty" % node.node_name())
+			return
+
+		var gen_time = Time.get_ticks_msec() - start_time
+		if gen_time > 100:
+			print_debug("%s processed in %d" % [node.node_name(), gen_time])
+
+		#TODO? some nodes could use threads, but some require terrain access
+		#var thread = Thread.new()
+		#thread.start(node.gen.bindv(inputs))
+		#threads[node] = thread
+
+	#for node in threads:
+		#var thread = threads[node]
+		#var result = thread.wait_to_finish()
+		#node.result = result
+		#if result == null:
+			#push_error("foliage: node %s returned null" % node.node_name())
+			#return
+		#elif result is Array and result.size() == 0:
+			#push_error("foliage: node %s returned empty" % node.node_name())
+			#return
+#
+	if pending > 0:
+		gen_next(nodes, time)
+
+
+
 
 func get_inputs(nodes: Array[FoliageNode], node: FoliageNode) -> Variant:
 	var inputs = []
