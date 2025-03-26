@@ -37,7 +37,6 @@ func _ready():
 	right_disconnects = true
 
 func save():
-	print_debug("save")
 	if foliage == null or foliage.graph == null:
 		print("save: graph null")
 		return
@@ -46,8 +45,8 @@ func save():
 		if node is FoliageNode:
 			foliage.graph.nodes.append(node.serialize())
 	foliage.graph.connections = connections
-	changed.emit()
 	ResourceSaver.save(foliage.graph, foliage.graph.resource_path)
+	changed.emit()
 
 func _on_graph_changed():
 	for child in get_children():

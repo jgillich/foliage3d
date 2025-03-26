@@ -3,20 +3,20 @@ class_name FoliageSplit extends FoliageNode
 
 func _init(props: Dictionary = {}) -> void:
 	title = node_name()
-	create_port("", "", Type.TRANSFORM, true, true)
-	create_port("", "", Type.TRANSFORM, false, true)
+	create_port("", "", Type.POINT, true, true)
+	create_port("", "", Type.POINT, false, true)
 	super(props)
 
-func gen(transforms: Array[Transform3D]) -> Array:
-	var t1: Array[Transform3D]
-	var t2: Array[Transform3D]
+func gen(points: Array[Foliage3DPoint]) -> Array:
+	var p1: Array[Foliage3DPoint] = []
+	var p2: Array[Foliage3DPoint] = []
 	var i = 0
-	while i < transforms.size():
-		t1.append(transforms[i])
-		if i+1 < transforms.size():
-			t2.append(transforms[i+1])
+	while i < points.size():
+		p1.append(points[i])
+		if i+1 < points.size():
+			p2.append(points[i+1])
 		i += 2
-	return [t1, t2]
+	return [p1, p2]
 
 static func node_name():
-	return  "Split"
+	return "Split"

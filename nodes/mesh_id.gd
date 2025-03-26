@@ -5,23 +5,16 @@ var id = 0
 
 func _init(props: Dictionary = {}) -> void:
 	title = node_name()
-	create_port("", "", Type.TRANSFORM, true, false)
+	create_port("", "", Type.POINT, true, false)
 	create_port("id", "ID", Type.INT, false, false)
 	super(props)
 
-func gen(transforms: Array[Transform3D]):
-	print_debug("adding meshes ", transforms.size())
+func gen(points: Array[Foliage3DPoint]) -> int:
+	var xforms: Array[Transform3D]
+	xforms.assign(points.map(func(p: Foliage3DPoint): return p.transform))
+	add_transforms(id, xforms)
 
-
-	#foliage.terrain.instancer.clear_by_mesh(id)
-	# added_transforms[region][mesh][cell] = []
-	#for xform in transforms:
-	#	var region = foliage.terrain.data.get_region(xform.origin)
-
-	#foliage.terrain.instancer.append_region()
-
-
-	add_transforms(id, transforms)
+	return OK
 
 static func node_name():
 	return "MeshID"

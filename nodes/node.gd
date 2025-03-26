@@ -5,14 +5,24 @@ var foliage: Foliage3D
 var result: Variant = null
 var _name: String = ""
 
-enum Type { TRANSFORM, VECTOR3, FLOAT, INT, BOOL, SCENE }
+enum Type { POINT, VECTOR3, FLOAT, INT, BOOL, SCENE }
 
 var ports: Array[Port]
 
 signal port_value_changed()
 
 static func nodes() -> Array:
-	return [FoliageSurfaceSampler, FoliageMeshID, FoliageSplit, FoliageTransform]
+	return [
+		FoliageSurfaceSampler,
+		FoliageMeshID,
+		FoliageSplit,
+		FoliageTransform,
+		#FoliageDensity
+		FoliageDifference,
+		FoliagePrune,
+		FoliageSize,
+		FoliageAlign,
+	]
 
 static func deserialize(dict: Dictionary) -> FoliageNode:
 	for n in nodes():
@@ -33,7 +43,7 @@ func _init(props: Dictionary = {}) -> void:
 		var color: Color
 
 		match port.type:
-			Type.TRANSFORM:
+			Type.POINT:
 				color = Color.BLUE
 		set_slot(i, port.input, port.type, color, port.output,  port.type, color)
 		add_child(port.get_control(self))
@@ -47,7 +57,7 @@ func add_transforms(mesh: int, xforms: Array[Transform3D]):
 	for i in range(xforms.size()):
 		var xform = xforms[i]
 		xform.origin += xform.basis.y * asset.height_offset
-		var loc := foliage.terrain.data.get_region_location(xform.origin)
+		var loc = foliage.terrain.data.get_region_location(xform.origin)
 		var region: Array[Transform3D] = dict.get_or_add(loc, [] as Array[Transform3D])
 		region.append(xform)
 		xforms[i] = xform
@@ -79,7 +89,7 @@ func serialize() -> Dictionary:
 
 	return dict
 
-func create_port(prop: String, name: String, type: Type, input: bool = false, output: bool = false, min: Variant = null):
+func create_port(prop: String, name: String, type: Type, input: bool = false, output: bool = false, min: Variant = null, max: Variant = null):
 	var port = Port.new()
 	port.prop = prop
 	port.name = name
@@ -87,6 +97,7 @@ func create_port(prop: String, name: String, type: Type, input: bool = false, ou
 	port.input = input
 	port.output = output
 	port.min = min
+	port.max = max
 	ports.append(port)
 
 static func node_name():
@@ -99,6 +110,7 @@ class Port:
 	var input: bool
 	var output: bool
 	var min: Variant
+	var max: Variant
 
 	func get_control(node: FoliageNode):
 		var vbox = VBoxContainer.new()
@@ -108,6 +120,8 @@ class Port:
 			var label = Label.new()
 			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			label.text = "In"
+			if not name.is_empty():
+				label.text = name
 			row1.add_child(label)
 
 		if not prop.is_empty():
@@ -130,6 +144,10 @@ class Port:
 					var v = SpinBox.new()
 					v.value = node.get(prop)
 					v.max_value = 1 << 31
+					if min != null:
+						v.min_value = min
+					if max != null:
+						v.max_value = max
 					v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					v.value_changed.connect(func(v: float):
 						node.set(prop, int(v))
@@ -144,6 +162,8 @@ class Port:
 					v.min_value = -(1 << 31)
 					if min != null:
 						v.min_value = min
+					if max != null:
+						v.max_value = max
 					v.step = 0.01
 					v.value_changed.connect(func(v: float):
 						node.set(prop, v)

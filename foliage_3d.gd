@@ -3,6 +3,8 @@ class_name Foliage3D extends Node3D
 
 signal graph_changed()
 
+@export var time_limit: int = 5
+
 @export var shape: Shape3D:
 	set(value):
 		shape = value
@@ -56,8 +58,6 @@ func queue_gen():
 func gen():
 	# https://terrain3d.readthedocs.io/en/latest/api/class_terrain3dregion.html#class-terrain3dregion-property-instances
 	var regions := terrain.data.get_regions_all()
-
-
 	for region in regions:
 		#TODO we get spammed with "Empty cell in region" if we don't always clear them, why?
 		#if not generated.has(region):
@@ -87,7 +87,12 @@ func gen():
 		node.foliage = self
 		nodes.append(node)
 
-	for i in range(100):
+	var time = Time.get_ticks_msec()
+
+	while true:
+		if Time.get_ticks_msec() - time > (time_limit*1000):
+			push_warning("foliage: generation time limit exceeded")
+			break
 		var pending: int = 0
 		for node in nodes:
 			if node.result != null:
@@ -97,25 +102,46 @@ func gen():
 				pending += 1
 				continue
 			node.result = node.gen.callv(inputs)
+			#node.result = node.gen.bind(inputs).call()
+			if node.result == null:
+				push_error("foliage: node %s returned null " % node.node_name(), inputs)
+				continue
+			if node.result is Array and node.result.size() == 0:
+				push_error("foliage: node %s returned empty " % node.node_name(), inputs)
+				continue
 		if pending == 0:
-			return
-
-	push_error("foliage: too many iterations")
+			break
 
 func get_inputs(nodes: Array[FoliageNode], node: FoliageNode) -> Variant:
-	if node.get_input_port_count()  == 0:
-		return []
-	var inputs: Array
-	inputs.resize(node.get_input_port_count())
-	for connection in graph.connections:
-		if connection["to_node"] != node.get_name():
+	var inputs = []
+
+	for i in range(node.ports.size()):
+		var port = node.ports[i]
+		if not port.input:
 			continue
-		var from = nodes.filter(func(n: FoliageNode): return n.name == connection["from_node"])
-		if from.size() == 0:
-			return inputs
-		if from[0].result == null:
-			return null
-		inputs[connection["to_port"]] = from[0].result[connection["from_port"]]
+		#inputs.resize(i+1)
+		match port.type:
+			FoliageNode.Type.POINT:
+				inputs.append([] as Array[Foliage3DPoint])
+			_:
+				push_warning("missing port type")
+				inputs.append([])
+
+		for connection in graph.connections:
+			if connection["to_node"] != node.get_name() or connection["to_port"] != i:
+				continue
+			var from = nodes.filter(func(n: FoliageNode): return n.name == connection["from_node"])
+			if from.size() == 0:
+				continue
+			var result = from[0].result
+			if result == null:
+				return null
+			if result.size() <= connection["from_port"]:
+				push_error("foliage: missing output on %s" % from[0].node_name())
+				return null
+
+			inputs[i].append_array(result[connection["from_port"]])
+
 
 	return inputs
 
