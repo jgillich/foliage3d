@@ -30,7 +30,10 @@ func gen() -> Array:
 				z += spacing/2
 				var offset = Vector3(rng.randf_range(-spacing/4, spacing/4), 0, rng.randf_range(-spacing/4, spacing/4))
 				var position = Vector3(x, size.y/2, z) + foliage.global_position
-				points.append(Foliage3DPoint.new(Transform3D(Basis(), position + offset), point_size))
+				var point = Foliage3DPoint.new()
+				point.transform = Transform3D(Basis(), position + offset)
+				point.size = point_size
+				points.append(point)
 	elif foliage.shape is SphereShape3D:
 		var radius = foliage.shape.radius
 		var phi = (1 + sqrt(5)) / 2
@@ -40,8 +43,10 @@ func gen() -> Array:
 			var theta = k * 2 * PI / phi ** 2
 			var offset = Vector3(rng.randf_range(-spacing/4, spacing/4), 0, rng.randf_range(-spacing/4, spacing/4))
 			var position = offset + Vector3(r * cos(theta), 0, r * sin(theta)) * radius
-			var transform = Transform3D(Basis(), position + foliage.global_position + Vector3(0, radius, 0))
-			points.append(Foliage3DPoint.new(transform, point_size))
+			var point = Foliage3DPoint.new()
+			point.transform = Transform3D(Basis(), position + foliage.global_position + Vector3(0, radius, 0))
+			point.size = point_size
+			points.append(point)
 	else:
 		push_error("foliage: shape not implemented")
 

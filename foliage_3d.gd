@@ -3,7 +3,12 @@ class_name Foliage3D extends Node3D
 
 signal graph_changed()
 
-@export var time_limit: int = 5
+@export_tool_button("Generate", "Callable") var _gen = gen
+@export_tool_button("Clear", "Callable") var _clear = clear
+
+@export var save_to_data: bool = false
+@export var auto_generate: bool = true
+@export var time_limit: int = 30
 
 @export var shape: Shape3D:
 	set(value):
@@ -28,7 +33,11 @@ var num_timer: int
 
 var debug_mesh: MeshInstance3D = MeshInstance3D.new()
 
-func _enter_tree() -> void:
+func _ready() -> void:
+	if not get_parent() is Terrain3D:
+		return
+	terrain = get_parent()
+
 	timer = Timer.new()
 	timer.wait_time = 1.0
 	timer.one_shot = true
@@ -37,7 +46,6 @@ func _enter_tree() -> void:
 
 	add_child(debug_mesh)
 	set_notify_transform(true)
-	terrain = get_parent()
 
 func _exit_tree() -> void:
 	if graph != null:
@@ -54,34 +62,13 @@ func _get_configuration_warnings():
 	return []
 
 func queue_gen():
+	if not auto_generate:
+		return
 	if timer != null:
 		timer.start()
 
 func gen():
-	# https://terrain3d.readthedocs.io/en/latest/api/class_terrain3dregion.html#class-terrain3dregion-property-instances
-	var regions := terrain.data.get_regions_all()
-	for region in regions:
-		#TODO we get spammed with "Empty cell in region" if we don't always clear them, why?
-		#if not generated.has(region):
-			#continue
-		var instances = regions[region].get_instances()
-		for mesh in instances.keys():
-			#if not generated[region].has(mesh):
-				#continue
-			var cells = instances[mesh]
-			for cell in cells.keys():
-				var arr = cells[cell]
-				var xforms = arr[0]
-				instances[mesh][cell][0] = xforms.filter(func(xform: Transform3D):
-					if not generated.has(region) or not generated[region].has(mesh):
-						return true
-					return not generated[region][mesh].has(xform)
-				)
-				if instances[mesh][cell][0].is_empty():
-					instances[mesh].erase(cell)
-
-	generated = {}
-	terrain.instancer.force_update_mmis()
+	clear()
 
 	var nodes: Array[FoliageNode]
 	for n in graph.nodes:
@@ -90,6 +77,19 @@ func gen():
 		nodes.append(node)
 
 	gen_next(nodes, Time.get_ticks_msec())
+
+
+	if save_to_data:
+		for region in generated.keys():
+			terrain.data.save_region(region, terrain.data_directory, terrain.save_16_bit)
+			#print_debug("saving data", region.location)
+			#foliage.terrain.data.save_region(region.location, foliage.terrain.data_directory)
+	#foliage.terrain.data.save_directory(foliage.terrain.data_directory)
+#
+	#var regions = foliage.terrain.data.get_regions_active()
+	#for region in regions:
+		#
+
 
 
 func gen_next(nodes: Array[FoliageNode], time: int):
@@ -124,9 +124,10 @@ func gen_next(nodes: Array[FoliageNode], time: int):
 
 		#TODO? some nodes could use threads, but some require terrain access
 		#var thread = Thread.new()
+		#thread.set_thread_safety_checks_enabled(false)
 		#thread.start(node.gen.bindv(inputs))
 		#threads[node] = thread
-
+#
 	#for node in threads:
 		#var thread = threads[node]
 		#var result = thread.wait_to_finish()
@@ -177,6 +178,32 @@ func get_inputs(nodes: Array[FoliageNode], node: FoliageNode) -> Variant:
 
 
 	return inputs
+
+func clear():
+	# https://terrain3d.readthedocs.io/en/latest/api/class_terrain3dregion.html#class-terrain3dregion-property-instances
+	var regions := terrain.data.get_regions_active()
+	for region in regions:
+		#TODO we get spammed with "Empty cell in region" if we don't always clear them, why?
+		#if not generated.has(region):
+			#continue
+		var instances = region.instances
+		for mesh in instances.keys():
+			#if not generated[region].has(mesh):
+				#continue
+			var cells = instances[mesh]
+			for cell in cells.keys():
+				var arr = cells[cell]
+				var xforms = arr[0]
+				instances[mesh][cell][0] = xforms.filter(func(xform: Transform3D):
+					if not generated.has(region.location) or not generated[region.location].has(mesh):
+						return true
+					return not generated[region.location][mesh].has(xform)
+				)
+				if instances[mesh][cell][0].is_empty():
+					instances[mesh].erase(cell)
+
+	generated = {}
+	terrain.instancer.force_update_mmis()
 
 func _validate_property(property: Dictionary):
 	if property.name in ["generated"]:

@@ -11,7 +11,6 @@ var current: Foliage3D
 #var saver: FoliageGraph.Saver
 
 func _ready():
-	#preload("./reloader.gd").new()
 	selection.selection_changed.connect(_selection_changed)
 	_selection_changed()
 

@@ -1,0 +1,20 @@
+[configuration]
+
+entry_symbol = "gdextension_init"
+compatibility_minimum = 4.4
+reloadable = true
+
+[libraries]
+
+linux.debug.x86_64 = "bin/libfoliage_3d.linux.debug.x86_64.so"
+linux.release.x86_64 = "bin/libfoliage_3d.linux.release.x86_64.so"
+linux.debug.arm64 = "bin/libfoliage_3d.linux.debug.arm64.so"
+linux.release.arm64 = "bin/libfoliage_3d.linux.release.arm64.so"
+linux.debug.rv64 = "bin/libfoliage_3d.linux.debug.rv64.so"
+linux.release.rv64 = "bin/libfoliage_3d.linux.release.rv64.so"
+windows.debug.x86_64 = "bin/libfoliage_3d.windows.debug.x86_64.dll"
+windows.release.x86_64 = "bin/libfoliage_3d.windows.release.x86_64.dll"
+macos.debug = "bin/libfoliage_3d.macos.debug.framework"
+macos.release = "bin/libfoliage_3d.macos.release.framework"
+android.debug.arm64 = "bin/libfoliage_3d.android.debug.arm64.so"
+android.release.arm64 = "bin/libfoliage_3d.android.release.arm64.so"

@@ -3,7 +3,7 @@ class_name FoliageEdit extends GraphEdit
 
 signal changed()
 
-@onready var node_popup: Window = preload("res://addons/procedural_foliage/node_popup.tscn").instantiate()
+@onready var node_popup: Window = preload("res://addons/foliage_3d/node_popup.tscn").instantiate()
 
 var foliage: Foliage3D:
 	set(value):

@@ -10,6 +10,7 @@ func _init(props: Dictionary = {}) -> void:
 	create_port("expression", "Expression", Type.STRING, false, false)
 	super(props)
 
+
 func gen(input: Array[Foliage3DPoint]) -> Array:
 	var exp = Expression.new()
 	exp.parse(expression, ["p"])
