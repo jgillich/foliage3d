@@ -31,5 +31,8 @@ void Foliage3DSlot::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_right", "slot"), &Foliage3DSlot::set_right);
 
 		
-	// ADD_PROPERTY(PropertyInfo(Variant::TRANSFORM3D, "transform"), "set_transform", "get_transform");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "prop"), "set_prop", "get_prop");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "left"), "set_left", "get_left");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "right"), "set_right", "get_right");
 }

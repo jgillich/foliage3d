@@ -6,12 +6,14 @@
 #include "point.hpp"
 #include "prune.hpp"
 #include "difference.hpp"
+#include "terrain.hpp"
 
 
 void gdextension_initialize(ModuleInitializationLevel p_level)
 {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
+		ClassDB::register_class<Foliage3DTerrain>();
 		ClassDB::register_class<Foliage3DPort>();
 		ClassDB::register_class<Foliage3DSlot>();
 		ClassDB::register_class<Foliage3DNode>();

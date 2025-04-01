@@ -11,19 +11,19 @@ var ports: Array[Port]
 
 signal port_value_changed()
 
-static func nodes() -> Array:
-	return [
-		FoliageSurfaceSampler,
-		FoliageMeshID,
-		FoliageSplit,
-		FoliageTransform,
-		FoliageDensityFilter,
-		FoliageDifference,
-		FoliagePrune,
-		FoliageSize,
-		#FoliageAlign,
-		FoliageFilter,
-	]
+#static func nodes() -> Array:
+	#return [
+		#FoliageSurfaceSampler,
+		#FoliageMeshID,
+		#FoliageSplit,
+		#FoliageTransform,
+		#FoliageDensityFilter,
+		#FoliageDifference,
+		#FoliagePrune,
+		#FoliageSize,
+		##FoliageAlign,
+		#FoliageFilter,
+	#]
 
 static func deserialize(dict: Dictionary) -> FoliageNode:
 	for n in nodes():

@@ -5,18 +5,18 @@ using namespace godot;
 
 Foliage3DDifference::Foliage3DDifference()
 {
-	Foliage3DSlot* inout = memnew(Foliage3DSlot);
-	inout->left->type = Foliage3DPort::Type::POINT;
-	inout->right->type = Foliage3DPort::Type::POINT;
+	// Foliage3DSlot* inout = memnew(Foliage3DSlot);
+	// inout->left->type = Foliage3DPort::Type::POINT;
+	// inout->right->type = Foliage3DPort::Type::POINT;
 
-	_slots.append(inout);
+	// _slots.append(inout);
 }
 
 Foliage3DDifference::~Foliage3DDifference()
 {
 }
 
-void Foliage3DDifference::_execute(TypedArray<Foliage3DPoint> p_input, TypedArray<Foliage3DPoint> p_diff)
+Array Foliage3DDifference::_execute(TypedArray<Foliage3DPoint> p_input, TypedArray<Foliage3DPoint> p_diff)
 {
 	TypedArray<Foliage3DPoint> points = p_input.duplicate();
 	for (int i = p_input.size() - 1; i >= 0; i--) {
@@ -33,11 +33,28 @@ void Foliage3DDifference::_execute(TypedArray<Foliage3DPoint> p_input, TypedArra
 
 	Array result;
 	result.append(points);
-	_promise->set_value(result);
+	return result;
 }
 
+TypedArray<int> Foliage3DDifference::get_inputs()
+{
+  TypedArray<int> inputs;
+	inputs.append(Variant::Type::TRANSFORM3D);
+	inputs.append(Variant::Type::TRANSFORM3D);
+  return inputs;
+}
+
+TypedArray<int> Foliage3DDifference::get_outputs()
+{
+  TypedArray<int> outputs;
+	outputs.append(Variant::Type::TRANSFORM3D);
+  return outputs;
+}
 
 void Foliage3DDifference::_bind_methods()
 {
+	ClassDB::bind_method(D_METHOD("_execute"), &Foliage3DDifference::_execute);
+	ClassDB::bind_method(D_METHOD("get_inputs"), &Foliage3DDifference::get_inputs);
+	ClassDB::bind_method(D_METHOD("get_outputs"), &Foliage3DDifference::get_outputs);
 }
 

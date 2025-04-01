@@ -11,7 +11,7 @@ env = SConscript("godot-cpp/SConstruct")
 # env.Append(LIBS=[terrain])
 
 # Add source files.
-env.Append(CPPPATH=["src/", 'Terrain3D/src'])
+env.Append(CPPPATH=["src/"])
 sources = Glob("src/*.cpp")
 
 # Get the project name from the gdextension file (e.g. example).

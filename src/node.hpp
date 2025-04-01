@@ -1,10 +1,12 @@
 #pragma once
 
 #include "slot.hpp"
-#include "terrain_3d.h"
+#include "terrain.hpp"
 
-#include <future>
+// #include <future>
 #include <godot_cpp/classes/object.hpp>
+#include <godot_cpp/variant/builtin_types.hpp>
+#include <godot_cpp/core/gdvirtual.gen.inc>
 
 using namespace std;
 using namespace godot;
@@ -16,12 +18,13 @@ class Foliage3DNode : public Object
 protected:
 	static void _bind_methods();
 
-	TypedArray<Foliage3DSlot> _slots;
+	// TypedArray<Foliage3DSlot> _slots;
 	TypedArray<Foliage3DNode> _inputs;
-	Terrain3D* _terrain;
+	Foliage3DTerrain* _terrain;
 	
-	promise<Variant>* _promise;
-	future<Variant>* _result;
+	// promise<Variant>* _promise;
+	// shared_future<Variant>* _result;
+	Variant _result;
 
 public:
 	Foliage3DNode();
@@ -29,17 +32,20 @@ public:
 
 	void execute();
 
-	static TypedArray<Foliage3DSlot> get_slots();
+	virtual TypedArray<int> get_inputs();
+	GDVIRTUAL0R(TypedArray<int>, get_inputs);
+
+	virtual TypedArray<int> get_outputs();
+	GDVIRTUAL0R(TypedArray<int>, get_outputs);
+
 
 	void set_params(Dictionary p_dict);
 	// Dictionary get_params();
 
-	void set_input(Foliage3DNode* node, int slot);
+	void set_input(Variant node, int slot);
 
-	Terrain3D* get_terrain() { return _terrain; };
-	void set_terrain(Terrain3D* p_terrain) { _terrain = p_terrain; };
+	Foliage3DTerrain* get_terrain() { return _terrain; };
+	void set_terrain(Foliage3DTerrain* p_terrain) { _terrain = p_terrain; };
 
-	future<Variant>* get_result() { return _result; };
+	Variant get_result() { return _result; };
 };
-
-

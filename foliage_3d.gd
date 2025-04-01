@@ -3,25 +3,17 @@ class_name Foliage3D extends Node3D
 
 signal graph_changed()
 
-@export_tool_button("Generate", "Callable") var _gen = gen
+@export_tool_button("Generate", "Callable") var _gen = generate
 @export_tool_button("Clear", "Callable") var _clear = clear
+@export_tool_button("Save", "Callable") var _save = save
 
-@export var save_to_data: bool = false
+
 @export var auto_generate: bool = true
-@export var time_limit: int = 30
+@export var auto_save: bool = false
 
-@export var shape: Shape3D:
+@export var graph: Foliage3DGraph:
 	set(value):
-		shape = value
-		debug_mesh.mesh = shape.get_debug_mesh()
-		queue_gen()
-
-@export var graph: FoliageGraph:
-	set(value):
-		if graph != null:
-			graph.changed.disconnect(queue_gen)
 		graph = value
-		graph.changed.connect(queue_gen)
 		graph_changed.emit()
 
 # region>mesh>transform
@@ -31,7 +23,8 @@ var terrain: Terrain3D
 var timer: Timer
 var num_timer: int
 
-var debug_mesh: MeshInstance3D = MeshInstance3D.new()
+var bounds := Foliage3DBounds.new()
+var edit: Foliage3DGraphEdit
 
 func _ready() -> void:
 	if not get_parent() is Terrain3D:
@@ -41,143 +34,54 @@ func _ready() -> void:
 	timer = Timer.new()
 	timer.wait_time = 1.0
 	timer.one_shot = true
-	timer.timeout.connect(gen)
+	timer.timeout.connect(generate)
 	add_child(timer)
 
-	add_child(debug_mesh)
 	set_notify_transform(true)
 
-func _exit_tree() -> void:
-	if graph != null:
-		graph.changed.disconnect(queue_gen)
+	update_bounds()
+
+#func _exit_tree() -> void:
+	#if graph != null:
+		#graph.changed.disconnect(queue_gen)
+
+func create_edit() -> Foliage3DGraphEdit:
+	edit = Foliage3DGraphEdit.new(graph, terrain, bounds)
+	edit.changed.connect(queue_generate)
+	edit.mesh_xforms_added.connect(func(region: Vector2i, mesh: int, xforms: Array[Transform3D]):
+		generated.get_or_add(region, {}).get_or_add(mesh, []).append_array(xforms)
+	)
+	return edit
+
+func update_bounds():
+	var shapes: Array[CollisionShape3D]
+	for child in get_children():
+		if child is CollisionShape3D:
+			shapes.append(child)
+	bounds.set_shapes(shapes)
 
 func _notification(what):
 	match what:
 		NOTIFICATION_TRANSFORM_CHANGED:
-			queue_gen()
+			queue_generate()
 
 func _get_configuration_warnings():
 	if terrain == null:
 		return ["Foliage3D must be child of Terrain3D"]
 	return []
 
-func queue_gen():
+func queue_generate():
 	if not auto_generate:
 		return
 	if timer != null:
 		timer.start()
 
-func gen():
+func generate():
+	update_bounds()
 	clear()
-
-	var nodes: Array[FoliageNode]
-	for n in graph.nodes:
-		var node = FoliageNode.deserialize(n)
-		node.foliage = self
-		nodes.append(node)
-
-	gen_next(nodes, Time.get_ticks_msec())
-
-
-	if save_to_data:
-		for region in generated.keys():
-			terrain.data.save_region(region, terrain.data_directory, terrain.save_16_bit)
-			#print_debug("saving data", region.location)
-			#foliage.terrain.data.save_region(region.location, foliage.terrain.data_directory)
-	#foliage.terrain.data.save_directory(foliage.terrain.data_directory)
-#
-	#var regions = foliage.terrain.data.get_regions_active()
-	#for region in regions:
-		#
-
-
-
-func gen_next(nodes: Array[FoliageNode], time: int):
-	var pending: int = 0
-	if Time.get_ticks_msec() - time > (time_limit*1000):
-		push_warning("foliage: generation time limit exceeded")
-		return
-
-	#var threads: Dictionary[FoliageNode, Thread]
-
-	for node in nodes:
-		if node.result != null:
-			continue
-
-		var inputs = get_inputs(nodes, node)
-		if inputs == null:
-			pending += 1
-			continue
-
-		var start_time = Time.get_ticks_msec()
-		node.result = node.gen.callv(inputs)
-		if node.result == null:
-			push_error("foliage: node %s returned null" % node.node_name())
-			return
-		elif node.result is Array and node.result.size() == 0:
-			push_error("foliage: node %s returned empty" % node.node_name())
-			return
-
-		var gen_time = Time.get_ticks_msec() - start_time
-		if gen_time > 100:
-			print_debug("%s processed in %d" % [node.node_name(), gen_time])
-
-		#TODO? some nodes could use threads, but some require terrain access
-		#var thread = Thread.new()
-		#thread.set_thread_safety_checks_enabled(false)
-		#thread.start(node.gen.bindv(inputs))
-		#threads[node] = thread
-#
-	#for node in threads:
-		#var thread = threads[node]
-		#var result = thread.wait_to_finish()
-		#node.result = result
-		#if result == null:
-			#push_error("foliage: node %s returned null" % node.node_name())
-			#return
-		#elif result is Array and result.size() == 0:
-			#push_error("foliage: node %s returned empty" % node.node_name())
-			#return
-#
-	if pending > 0:
-		gen_next(nodes, time)
-
-
-
-
-func get_inputs(nodes: Array[FoliageNode], node: FoliageNode) -> Variant:
-	var inputs = []
-
-	for i in range(node.ports.size()):
-		var port = node.ports[i]
-		if not port.input:
-			continue
-		#inputs.resize(i+1)
-		match port.type:
-			FoliageNode.Type.POINT:
-				inputs.append([] as Array[Foliage3DPoint])
-			_:
-				push_warning("missing port type")
-				inputs.append([])
-
-		for connection in graph.connections:
-			if connection["to_node"] != node.get_name() or connection["to_port"] != i:
-				continue
-			var from = nodes.filter(func(n: FoliageNode): return n.name == connection["from_node"])
-			if from.size() == 0:
-				continue
-			var result = from[0].result
-			if result == null:
-				return null
-			if result.size() <= connection["from_port"]:
-				push_error("foliage: missing output on %s " % from[0].node_name())
-				inputs[i].append_array([])
-				continue
-
-			inputs[i].append_array(result[connection["from_port"]])
-
-
-	return inputs
+	edit.generate()
+	if auto_save:
+		save()
 
 func clear():
 	# https://terrain3d.readthedocs.io/en/latest/api/class_terrain3dregion.html#class-terrain3dregion-property-instances
@@ -193,6 +97,8 @@ func clear():
 			var cells = instances[mesh]
 			for cell in cells.keys():
 				var arr = cells[cell]
+				if arr.is_empty():
+					continue
 				var xforms = arr[0]
 				instances[mesh][cell][0] = xforms.filter(func(xform: Transform3D):
 					if not generated.has(region.location) or not generated[region.location].has(mesh):
@@ -204,6 +110,13 @@ func clear():
 
 	generated = {}
 	terrain.instancer.force_update_mmis()
+
+func save():
+	#terrain.data.save_directory(terrain.data_directory)
+	#for region in generated.keys():
+	for region in terrain.data.get_regions_active():
+		region.save(region.resource_path, terrain.save_16_bit)
+		#terrain.data.save_region(region, terrain.data_directory, terrain.save_16_bit)
 
 func _validate_property(property: Dictionary):
 	if property.name in ["generated"]:

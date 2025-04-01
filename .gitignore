@@ -12,3 +12,5 @@
 
 # Editors
 .vscode/
+
+bin/

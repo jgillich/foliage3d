@@ -34,6 +34,6 @@ void Foliage3DPort::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_hint"), &Foliage3DPort::get_hint);
 	ClassDB::bind_method(D_METHOD("set_hint", "hint"), &Foliage3DPort::set_hint);
 
-		
-	// ADD_PROPERTY(PropertyInfo(Variant::TRANSFORM3D, "transform"), "set_transform", "get_transform");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "type"), "set_type", "get_type");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "hint"), "set_hint", "get_hint");
 }

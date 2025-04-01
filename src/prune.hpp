@@ -12,10 +12,12 @@ class Foliage3DPrune : public Foliage3DNode
 protected:
 	static void _bind_methods();
 
-	void _execute(TypedArray<Foliage3DPoint> p_input);
+	Array _execute(TypedArray<Foliage3DPoint> p_input);
 
 public:
 	Foliage3DPrune();
 	~Foliage3DPrune();
 
+	TypedArray<int> get_inputs();
+	TypedArray<int> get_outputs();
 };

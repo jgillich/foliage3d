@@ -1,7 +1,7 @@
 @tool
 extends Window
 
-signal node_created(FoliageNode, Vector2i)
+signal node_created(String, Vector2i)
 
 @onready var tree: Tree = %Tree
 var node_position: Vector2
@@ -23,11 +23,11 @@ func refresh():
 	tree.clear()
 	var root = tree.create_item()
 
-	for i in range(FoliageNode.nodes().size()):
+	for type in Foliage3DGraphEdit.NODES.keys():
 		var item = tree.create_item(root)
-		item.set_text(0, FoliageNode.nodes()[i].node_name())
+		item.set_text(0, type)
 		#item.set_tooltip_text(0, "description")
-		item.set_metadata(0, i)
+		item.set_metadata(0, type)
 
 func _on_item_selected() -> void:
 	var item = tree.get_selected()
@@ -43,5 +43,5 @@ func _on_item_activated() -> void:
 	var selected = tree.get_selected()
 	if selected == null:
 		return
-	node_created.emit(FoliageNode.nodes()[selected.get_metadata(0)].new(), node_position)
+	node_created.emit(selected.get_metadata(0), node_position)
 	hide()
