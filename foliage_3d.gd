@@ -88,12 +88,13 @@ func clear():
 	var regions := terrain.data.get_regions_active()
 	for region in regions:
 		#TODO we get spammed with "Empty cell in region" if we don't always clear them, why?
-		#if not generated.has(region):
-			#continue
+		if not generated.has(region.location):
+			continue
+		region.set_modified(true)
 		var instances = region.instances
 		for mesh in instances.keys():
-			#if not generated[region].has(mesh):
-				#continue
+			if not generated[region.location].has(mesh):
+				continue
 			var cells = instances[mesh]
 			for cell in cells.keys():
 				var arr = cells[cell]
@@ -101,22 +102,18 @@ func clear():
 					continue
 				var xforms = arr[0]
 				instances[mesh][cell][0] = xforms.filter(func(xform: Transform3D):
-					if not generated.has(region.location) or not generated[region.location].has(mesh):
-						return true
+					#if not generated.has(region.location) or not generated[region.location].has(mesh):
+						#return true
 					return not generated[region.location][mesh].has(xform)
 				)
 				if instances[mesh][cell][0].is_empty():
 					instances[mesh].erase(cell)
 
 	generated = {}
-	terrain.instancer.force_update_mmis()
+	terrain.instancer.update_mmis(true)
 
 func save():
-	#terrain.data.save_directory(terrain.data_directory)
-	#for region in generated.keys():
-	for region in terrain.data.get_regions_active():
-		region.save(region.resource_path, terrain.save_16_bit)
-		#terrain.data.save_region(region, terrain.data_directory, terrain.save_16_bit)
+	terrain.data.save_directory(terrain.data_directory)
 
 func _validate_property(property: Dictionary):
 	if property.name in ["generated"]:

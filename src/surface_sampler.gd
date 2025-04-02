@@ -37,19 +37,15 @@ func _generate() -> Array:
 			var offset = Vector3(rng.randf_range(-spacing/2, spacing/2), 0, rng.randf_range(-spacing/2, spacing/2))
 			var position = Vector3(x, 0, z) + bounds.aabb.position + offset
 			position.y = get_height(position)
-			var transform = Transform3D(Basis(), position)
 
 			if not bounds.contains(position):
 				continue
 
-			# align to surface normal
-			var scale = transform.basis.get_scale()
-			var normal = get_normal(transform.origin)
-			transform.basis.y = normal
-			transform.basis.z = -transform.basis.z.cross(normal)
-			transform.basis.x = -transform.basis.x.cross(normal)
-			transform.basis = transform.basis.orthonormalized().scaled(scale)
+			var normal = get_normal(position)
+			var tangent = normal.cross(Vector3.UP).normalized()
+			var bitangent = tangent.cross(normal).normalized()
 
+			var transform = Transform3D(Basis(tangent, normal, bitangent), position)
 			points.append(Foliage3DPoint.new(transform, point_size))
 
 	return [points]

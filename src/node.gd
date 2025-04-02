@@ -76,12 +76,14 @@ func add_mesh_xforms(mesh: int, xforms: Array[Transform3D]) -> void:
 		colors.fill(Color.WHITE)
 
 		var region = terrain3d.data.get_region(loc)
+		region.set_modified(true)
+
 		var global_local_offset = Vector3(loc.x, 0, loc.y) * region.region_size * terrain3d.vertex_spacing
 		for i in range(dict[loc].size()):
 			dict[loc][i].origin -= global_local_offset
 
-		mesh_xforms_added.emit.call_deferred(loc, mesh, dict[loc])
-		terrain3d.instancer.append_region.call_deferred(region, mesh, dict[loc], colors)
+		mesh_xforms_added.emit(loc, mesh, dict[loc])
+		terrain3d.instancer.append_region(region, mesh, dict[loc], colors)
 
 func type() -> String:
 	return get_script().get_global_name().trim_prefix("Foliage3D")

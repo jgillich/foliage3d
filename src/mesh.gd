@@ -13,6 +13,9 @@ func get_outputs() -> Array[int]:
 	return []
 
 func _generate(points: Array[Foliage3DPoint]) -> Array:
+	if meshes.is_empty():
+		return []
+
 	var ids: Array[int]
 	for mesh in meshes:
 		ids.append(get_or_create_mesh(mesh))
@@ -26,7 +29,7 @@ func _generate(points: Array[Foliage3DPoint]) -> Array:
 			xforms[j].append(points[i+j].transform)
 
 	for i in range(ids.size()):
-		add_mesh_xforms(ids[i], xforms[i])
+		add_mesh_xforms.call_deferred(ids[i], xforms[i])
 
 	return []
 
