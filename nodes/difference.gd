@@ -7,7 +7,7 @@ func get_inputs() -> Array[int]:
 func get_outputs() -> Array[int]:
 	return [TYPE_POINT]
 
-# removes all points within the extents of self
+# removes all points within the extents of diff
 func _generate(input: Array[Foliage3DPoint] = [], diff: Array[Foliage3DPoint] = []) -> Array:
 	var points: Array[Foliage3DPoint] = input.duplicate()
 	for i in range(input.size()-1, -1, -1):

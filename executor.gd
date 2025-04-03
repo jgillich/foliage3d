@@ -31,9 +31,6 @@ func execute(p_nodes: Dictionary[String, Foliage3DNode], p_connections: Array[Di
 			return
 
 		while next.size() > 0:
-			#var node = next.pop_back()
-			#node.generate()
-
 			## TODO add max threads config
 			threads.clear()
 			for i in range(min(4, next.size())):

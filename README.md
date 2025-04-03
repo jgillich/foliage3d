@@ -17,15 +17,6 @@ Create a *SurfaceSampler* node by right-clicking anywhere and feed its
 output into a *MeshSpawner* node. To assign a mesh, click on the *MeshSpawner* and add at least one mesh in the sidebar on the right.
 This should spawn meshes in the 3D viewport. Click the save button under *Foliage3D* to save the meshes into your terrain data, or clear to delete them.
 
-## Performance
-
-This plugin uses threads and should perform decently up to a certain size.
-A bounding box is drawn around all shapes, therfore it is recommended to only use shapes in close proximity to each other.
-Creating a very large number of points (e.g. to spawn grass) and comparing them with e.g. the *Difference* or *Prune* nodes will take considerable time.
-
-A C++ rewrite of core nodes has been put on hold because I am not an experienced C++ programmer
-and I have concerns that it will deter potential contributors.
-
 ## Nodes
 
 #### SurfaceSampler
@@ -51,3 +42,19 @@ Remove points that overlap with self.
 #### MeshSpawner
 
 Spawn meshes.
+
+## Performance
+
+This plugin uses threads and should perform decently up to a certain size.
+A bounding box is drawn around all shapes, therfore it is recommended to only use shapes in close proximity to each other.
+Creating a very large number of points (e.g. to spawn grass) and comparing them with e.g. the *Difference* or *Prune* nodes will take considerable time.
+
+A C++ rewrite of core nodes has been put on hold because I am not an experienced C++ programmer
+and I am concerned that it will deter potential contributors.
+
+
+## Contributing
+
+UX and performance improvements are welcome. This plugin is inspired by Unreal PCG,
+however we do not intend to create an exact clone. Features are welcome as well,
+but justifications should be provided if they deviate meaningfully from PCG.

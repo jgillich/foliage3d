@@ -44,7 +44,7 @@ func _init(type: String, bounds: Foliage3DBounds, terrain: Terrain3D, props: Dic
 		if (prop.usage & PROPERTY_USAGE_STORAGE) == 0:
 			continue
 		# TODO not sure why all C++ props are included
-		if ["terrain", "slots", "script"].has(prop["name"]):
+		if ["terrain", "slots", "script", "resource_name"].has(prop["name"]):
 			continue
 		if props.has(prop["name"]):
 			node.set(prop["name"], props[prop["name"]])

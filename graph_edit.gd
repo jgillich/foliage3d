@@ -19,7 +19,7 @@ func _init(p_resource: Foliage3DGraph, p_terrain: Terrain3D, p_bounds: Foliage3D
 
 func _ready():
 	for params in resource.nodes:
-		var node = create_node(params["node"], params)
+		var node = create_node(params["resource_name"], params)
 		add_child(node)
 
 	for connection in resource.connections:
@@ -60,52 +60,6 @@ func generate():
 	var executor = Foliage3DExecutor.new()
 	executor.execute(nodes, connections)
 
-	#for connection in connections:
-		#var from = get_node(connection["from_node"])
-		#var to = get_node(connection["to_node"])
-		#if from == null or to == null:
-			#push_error("bad node connection")
-			#return
-		#to.node.set_input(from.node, connection["to_port"])
-#
-	## this might be a little resource intensive
-	## look into green threads or a fixed thread pool maybe
-	#var threads: Array[Thread]
-	#for node in get_children():
-		#if node is not Foliage3DGraphEditNode:
-			#continue
-		#node.node.terrain = terrain
-		##var thread = Thread.new()
-		##print("exec")
-		##thread.start(node.node.execute)
-		##threads.append(thread)
-		#node.node.execute()
-#
-	#for thread in threads:
-		#thread.wait_to_finish()
-
-
-
-
-#func load_graph(graph: Foliage3DGraph):
-	#for child in get_children():
-		#if child is GraphNode:
-			#remove_child(child)
-#
-	#var instances = graph.build_instances()
-#
-	#for name in instances.keys():
-		#add_child(Foliage3DGraphEditNode.new(name))
-##
-	#for connection in graph.connections:
-		#connection["from_node"] = connection["from_node"].validate_node_name()
-		#connection["to_node"] = connection["to_node"].validate_node_name()
-		#var err = connect_node(connection["from_node"], connection["from_port"], connection["to_node"], connection["to_port"])
-		#if err != OK:
-			#push_error("foliage: connect_node error %d" % err)
-#
-	#queue_redraw()
-
 func save():
 	resource.nodes = []
 	resource.connections = connections
@@ -113,7 +67,6 @@ func save():
 	for node in get_children():
 		if node is Foliage3DGraphEditNode:
 			var dict = {
-				"node": node.title,
 				"name": node.get_name().validate_node_name(),
 				"position_offset": node.position_offset
 			}

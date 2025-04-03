@@ -1,4 +1,4 @@
-class_name Foliage3DTransform extends Foliage3DNode
+class_name Foliage3DTransformPoint extends Foliage3DNode
 
 @export var offset_min: Vector3:
 	set(value):
