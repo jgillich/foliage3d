@@ -1,6 +1,8 @@
 @tool
 extends GraphEdit
 
+const Foliage3DGraphEditNode = preload("res://addons/foliage_3d/graph_edit_node.gd")
+
 signal changed()
 signal mesh_xforms_added(region: Vector2i, mesh: int, xforms: Array[Vector3])
 

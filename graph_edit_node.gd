@@ -1,5 +1,5 @@
 @tool
-class_name Foliage3DGraphEditNode extends GraphNode
+extends GraphNode
 
 signal changed()
 signal mesh_xforms_added(region: Vector2i, mesh: int, xforms: Array[Vector3])

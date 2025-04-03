@@ -20,7 +20,6 @@ func set_shapes(p_shapes: Array[CollisionShape3D]):
 	DebugDraw3D.draw_box(aabb.position, Quaternion(), aabb.size, Color.RED, false, 10.0)
 
 func contains(position: Vector3) -> bool:
-	#return true
 	for shape in shapes:
 		if shape_contains(position, shape):
 			return true
