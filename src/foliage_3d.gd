@@ -1,7 +1,7 @@
 @tool
 class_name Foliage3D extends Node3D
 
-const Foliage3DGraphEdit := preload("res://addons/foliage_3d/graph_edit.gd")
+const Foliage3DGraphEdit := preload("graph_edit.gd")
 
 static var NODES = {
 	"Difference": Foliage3DDifference,

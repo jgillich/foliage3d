@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bd3iulla58u3y"]
 
-[ext_resource type="Script" uid="uid://besoxm36sku3c" path="res://addons/procedural_foliage/node_popup.gd" id="1_kwkgp"]
+[ext_resource type="Script" uid="uid://besoxm36sku3c" path="res://addons/foliage_3d/src/node_popup.gd" id="1_kwkgp"]
 
 [node name="NodePopup" type="Window"]
 title = "Create node"

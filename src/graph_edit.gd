@@ -1,12 +1,12 @@
 @tool
 extends GraphEdit
 
-const Foliage3DGraphEditNode = preload("res://addons/foliage_3d/graph_edit_node.gd")
+const Foliage3DGraphEditNode = preload("graph_edit_node.gd")
 
 signal changed()
 signal mesh_xforms_added(region: Vector2i, mesh: int, xforms: Array[Vector3])
 
-@onready var node_popup: Window = preload("res://addons/foliage_3d/node_popup.tscn").instantiate()
+@onready var node_popup: Window = preload("node_popup.tscn").instantiate()
 
 var resource: Foliage3DGraph
 var terrain: Terrain3D
