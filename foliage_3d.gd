@@ -1,6 +1,20 @@
 @tool
 class_name Foliage3D extends Node3D
 
+const Foliage3DGraphEdit := preload("res://addons/foliage_3d/graph_edit.gd")
+
+static var NODES = {
+	"Difference": Foliage3DDifference,
+	"Prune": Foliage3DPrune,
+	"SurfaceSampler": Foliage3DSurfaceSampler,
+	"Mesh": Foliage3DMeshSpawner,
+	"MeshSpawner": Foliage3DMeshSpawner,
+	"Transform": Foliage3DTransform,
+	"Filter": Foliage3DFilter,
+	"FilterPoint": Foliage3DFilterPoint,
+	"Slice": Foliage3DSlice,
+}
+
 signal graph_changed()
 
 @export_tool_button("Generate", "Callable") var _gen = generate

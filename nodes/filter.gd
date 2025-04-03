@@ -1,21 +1,28 @@
 @tool
-class_name FoliageFilter extends FoliageNode
+class_name Foliage3DFilter extends Foliage3DNode
 
-var expression: String = "true"
+var expression: String = "true":
+	set(value):
+		expression = value
+		changed.emit()
 
-func _init(props: Dictionary = {}) -> void:
-	title = node_name()
-	create_port("", "", Type.POINT, true, true)
-	create_port("", "Rest", Type.POINT, false, true)
-	create_port("expression", "Expression", Type.STRING, false, false)
-	super(props)
+# TODO accept any object type
+func get_inputs() -> Array[int]:
+	return [TYPE_POINT]
 
+func get_outputs() -> Array[int]:
+	return [TYPE_POINT, TYPE_POINT]
 
 func gen(input: Array[Foliage3DPoint]) -> Array:
-	var exp = Expression.new()
-	exp.parse(expression, ["p"])
 	var out: Array[Foliage3DPoint]
 	var rest: Array[Foliage3DPoint]
+
+	var exp = Expression.new()
+	var err = exp.parse(expression, ["p"])
+	if err != OK:
+		push_warning("foliage: bad expression '%s'" % expression)
+		return [out, rest]
+
 	for point in input:
 		var res = exp.execute([point])
 		if res is bool:
@@ -25,8 +32,6 @@ func gen(input: Array[Foliage3DPoint]) -> Array:
 				rest.append(point)
 		else:
 			push_warning("foliage: bad expression '%s'" % expression)
+			break
 
 	return [out, rest]
-
-static func node_name():
-	return  "Filter"

@@ -23,7 +23,7 @@ func refresh():
 	tree.clear()
 	var root = tree.create_item()
 
-	for type in Foliage3DGraphEdit.NODES.keys():
+	for type in Foliage3D.NODES.keys():
 		var item = tree.create_item(root)
 		item.set_text(0, type)
 		#item.set_tooltip_text(0, "description")

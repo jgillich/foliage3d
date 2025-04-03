@@ -1,238 +1,89 @@
 @tool
-class_name FoliageNode extends GraphNode
+class_name Foliage3DNode extends Resource
 
-var foliage: Foliage3D
-var result: Variant = null
-var _name: String = ""
+enum {
+	TYPE_POINT = 100
+}
 
-enum Type { POINT, VECTOR3, FLOAT, INT, BOOL, STRING }
+signal mesh_xforms_added(region: Vector2i, mesh: int, xforms: Array[Vector3])
 
-var ports: Array[Port]
+var inputs: Array[Array]
+var result: Array
+var terrain3d: Terrain3D
+var bounds: Foliage3DBounds
 
-signal port_value_changed()
+func _init():
+	inputs.resize(get_inputs().size())
+	resource_name = type()
+	for i in range(inputs.size()):
+		inputs[i] = []
 
-#static func nodes() -> Array:
-	#return [
-		#FoliageSurfaceSampler,
-		#FoliageMeshID,
-		#FoliageSplit,
-		#FoliageTransform,
-		#FoliageDensityFilter,
-		#FoliageDifference,
-		#FoliagePrune,
-		#FoliageSize,
-		##FoliageAlign,
-		#FoliageFilter,
-	#]
+func get_inputs() -> Array[int]:
+	return []
 
-static func deserialize(dict: Dictionary) -> FoliageNode:
-	for n in nodes():
-		if dict.get("node") == n.node_name():
-			var d = dict.duplicate()
-			d.erase("node")
-			return n.new(d)
-	return null
+func get_outputs() -> Array[int]:
+	return []
 
-func _init(props: Dictionary = {}) -> void:
-	add_theme_constant_override("separation", 4)
+func generate():
+	Thread.set_thread_safety_checks_enabled(false)
+	var time = Time.get_ticks_msec()
 
-	for k in props.keys():
-		set(k, props[k])
+	var args: Array
 
-	for i in range(ports.size()):
-		var port = ports[i]
-		var color: Color
+	for i in range(inputs.size()):
+		for j in inputs[i]:
+			var port = j[0]
+			var node = j[1]
+			if args.size() <= i:
+				args.append(node.result[port].duplicate())
+			else:
+				args[i].append_array(node.result[port])
 
-		match port.type:
-			Type.POINT:
-				color = Color.BLUE
-		set_slot(i, port.input, port.type, color, port.output,  port.type, color)
-		add_child(port.get_control(self))
+	if args.size() != get_inputs().size():
+		return
 
-func add_transforms(mesh: int, xforms: Array[Transform3D]):
-	if mesh >= foliage.terrain.assets.get_mesh_count():
+	result = callv("_generate", args)
+
+	for i in range(inputs.size()):
+		inputs[i] = []
+
+	time = Time.get_ticks_msec() - time
+	#if time > 100:
+	print_debug("%s completed in %dms" % [type(), time])
+
+func get_height(pos: Vector3) -> float:
+	return terrain3d.data.get_height(pos)
+
+func get_normal(pos: Vector3) -> Vector3:
+	return terrain3d.data.get_normal(pos)
+
+func add_mesh_xforms(mesh: int, xforms: Array[Transform3D]) -> void:
+	if mesh >= terrain3d.assets.get_mesh_count():
 		push_warning("foliage: mesh %d out of range" % mesh)
 		return
 	var dict: Dictionary = {}
-	var asset := foliage.terrain.assets.get_mesh_asset(mesh)
+	var asset := terrain3d.assets.get_mesh_asset(mesh)
 	for i in range(xforms.size()):
 		var xform = xforms[i]
 		xform.origin += xform.basis.y * asset.height_offset
-		var loc = foliage.terrain.data.get_region_location(xform.origin)
+		var loc = terrain3d.data.get_region_location(xform.origin)
 		var region: Array[Transform3D] = dict.get_or_add(loc, [] as Array[Transform3D])
 		region.append(xform)
-		xforms[i] = xform
 
 	for loc in dict.keys():
 		var colors: PackedColorArray = []
 		colors.resize(dict[loc].size())
 		colors.fill(Color.WHITE)
 
-		var region = foliage.terrain.data.get_region(loc)
-		var global_local_offset = Vector3(loc.x, 0, loc.y) * region.region_size * foliage.terrain.vertex_spacing
+		var region = terrain3d.data.get_region(loc)
+		region.set_modified(true)
+
+		var global_local_offset = Vector3(loc.x, 0, loc.y) * region.region_size * terrain3d.vertex_spacing
 		for i in range(dict[loc].size()):
 			dict[loc][i].origin -= global_local_offset
-			foliage.generated.get_or_add(loc, {}).get_or_add(mesh, []).append(dict[loc][i])
 
-		foliage.terrain.instancer.append_region(region, mesh, dict[loc], colors)
+		mesh_xforms_added.emit(loc, mesh, dict[loc])
+		terrain3d.instancer.append_region(region, mesh, dict[loc], colors)
 
-func serialize() -> Dictionary:
-	var dict = {
-		"node": title,
-		"name": get_name().validate_node_name(),
-		"position_offset": position_offset
-	}
-
-	for port in ports:
-		if port.prop.is_empty():
-			continue
-		dict[port.prop] = get(port.prop)
-
-	return dict
-
-func create_port(prop: String, name: String, type: Type, input: bool = false, output: bool = false, min: Variant = null, max: Variant = null, step: Variant = null):
-	var port = Port.new()
-	port.prop = prop
-	port.name = name
-	port.type = type
-	port.input = input
-	port.output = output
-	port.min = min
-	port.max = max
-	ports.append(port)
-
-static func node_name():
-	return ""
-
-class Port:
-	var prop: String
-	var name: String
-	var type: Type
-	var input: bool
-	var output: bool
-	var min: Variant
-	var max: Variant
-	var step: Variant
-
-	func get_control(node: FoliageNode):
-		var vbox = VBoxContainer.new()
-		var row1 = HBoxContainer.new()
-		vbox.add_child(row1)
-		if input:
-			var label = Label.new()
-			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			label.text = "In"
-			if not name.is_empty():
-				label.text = name
-			row1.add_child(label)
-
-		if not prop.is_empty():
-			var label = Label.new()
-			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			label.text = name
-			row1.add_child(label)
-
-			match type:
-				Type.STRING:
-					var l = LineEdit.new()
-					l.text = node.get(prop)
-					l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-					l.text_changed.connect(func(v: String):
-						node.set(prop, v)
-						node.port_value_changed.emit()
-					)
-					row1.add_child(l)
-				Type.BOOL:
-					var v = CheckBox.new()
-					v.button_pressed = node.get(prop)
-					v.size_flags_horizontal = Control.SIZE_EXPAND_FILL | Control.SIZE_SHRINK_END
-					v.toggled.connect(func(value: bool):
-						node.set(prop, value)
-						node.port_value_changed.emit()
-					)
-					row1.add_child(v)
-				Type.INT:
-					var v = SpinBox.new()
-					v.max_value = 1 << 31
-					if min != null:
-						v.min_value = min
-					if max != null:
-						v.max_value = max
-					v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-					v.value = node.get(prop)
-					v.value_changed.connect(func(v: float):
-						node.set(prop, int(v))
-						node.port_value_changed.emit()
-					)
-					row1.add_child(v)
-				Type.FLOAT:
-					var v = SpinBox.new()
-					v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-					v.max_value = 1 << 31
-					v.min_value = -(1 << 31)
-					if min != null:
-						v.min_value = min
-					if max != null:
-						v.max_value = max
-					v.step = 0.01
-					if step != null:
-						v.step = step
-					elif min != null and min < v.step:
-						v.step = min
-					v.value = node.get(prop)
-					v.value_changed.connect(func(v: float):
-						node.set(prop, v)
-						node.port_value_changed.emit()
-					)
-					row1.add_child(v)
-				Type.VECTOR3:
-					var x = SpinBox.new()
-					var y = SpinBox.new()
-					var z = SpinBox.new()
-					x.get_line_edit().add_theme_constant_override("minimum_character_width", 3)
-					y.get_line_edit().add_theme_constant_override("minimum_character_width", 3)
-					z.get_line_edit().add_theme_constant_override("minimum_character_width", 3)
-					var value: Vector3 = node.get(prop)
-					x.max_value = 1 << 31
-					y.max_value = 1 << 31
-					z.max_value = 1 << 31
-					x.min_value = -(1 << 31)
-					y.min_value = -(1 << 31)
-					z.min_value = -(1 << 31)
-					x.step = 0.01
-					y.step = 0.01
-					z.step = 0.01
-					x.value = value.x
-					y.value = value.y
-					z.value = value.z
-					x.value_changed.connect(func(_v: float):
-						node.set(prop, Vector3(x.value, y.value, z.value))
-						node.port_value_changed.emit()
-					)
-					y.value_changed.connect(func(_v: float):
-						node.set(prop, Vector3(x.value, y.value, z.value))
-						node.port_value_changed.emit()
-					)
-					z.value_changed.connect(func(_v: float):
-						node.set(prop, Vector3(x.value, y.value, z.value))
-						node.port_value_changed.emit()
-					)
-					x.prefix = "x"
-					y.prefix = "y"
-					z.prefix = "z"
-					x.alignment = HORIZONTAL_ALIGNMENT_FILL
-					y.alignment = HORIZONTAL_ALIGNMENT_FILL
-					z.alignment = HORIZONTAL_ALIGNMENT_FILL
-					row1.add_child(x)
-					row1.add_child(y)
-					row1.add_child(z)
-
-		if output:
-			var label = Label.new()
-			label.text = "Out"
-			if not name.is_empty():
-				label.text = name
-			label.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND_FILL
-			row1.add_child(label)
-
-		return vbox
+func type() -> String:
+	return get_script().get_global_name().trim_prefix("Foliage3D")

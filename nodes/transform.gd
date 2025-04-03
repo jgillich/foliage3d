@@ -1,36 +1,53 @@
-@tool
-class_name FoliageTransform extends FoliageNode
+class_name Foliage3DTransform extends Foliage3DNode
 
-var offset_min: Vector3
-var offset_max: Vector3
-var rotation_min: Vector3
-var rotation_max: Vector3
-var rotation_absolute: bool
-var scale_min: Vector3 = Vector3(1, 1, 1)
-var scale_max: Vector3 = Vector3(1, 1, 1)
-var scale_uniform: bool = true
-var seed: int
+@export var offset_min: Vector3:
+	set(value):
+		offset_min = value
+		changed.emit()
+@export var offset_max: Vector3:
+	set(value):
+		offset_max = value
+		changed.emit()
+@export var rotation_min: Vector3:
+	set(value):
+		rotation_min = value
+		changed.emit()
+@export var rotation_max: Vector3:
+	set(value):
+		rotation_max = value
+		changed.emit()
+@export var rotation_absolute: bool:
+	set(value):
+		rotation_absolute = value
+		changed.emit()
+@export var scale_min: Vector3 = Vector3(1, 1, 1):
+	set(value):
+		scale_min = value
+		changed.emit()
+@export var scale_max: Vector3 = Vector3(1, 1, 1):
+	set(value):
+		scale_max = value
+		changed.emit()
+@export var scale_uniform: bool = true:
+	set(value):
+		scale_uniform = value
+		changed.emit()
+@export var seed: int:
+	set(value):
+		seed = value
+		changed.emit()
 
-func _init(props: Dictionary = {}) -> void:
-	title = node_name()
-	create_port("", "", Type.POINT, true, true)
-	create_port("offset_min", "Offset Min", Type.VECTOR3, false, false)
-	create_port("offset_max", "Offset Max", Type.VECTOR3, false, false)
-	create_port("rotation_min", "Rotation Min", Type.VECTOR3, false, false, 0, 360)
-	create_port("rotation_max", "Rotation Max", Type.VECTOR3, false, false, 0, 360)
-	create_port("rotation_absolute", "Absolute Rotation", Type.BOOL, false, false)
-	create_port("scale_min", "Scale Min", Type.VECTOR3, false, false)
-	create_port("scale_max", "Scale Max", Type.VECTOR3, false, false)
-	create_port("scale_uniform", "Uniform Scale", Type.BOOL, false, false)
+func get_inputs() -> Array[int]:
+	return [TYPE_POINT]
 
-	create_port("seed", "Seed", Type.INT, false, false)
-	super(props)
+func get_outputs() -> Array[int]:
+	return [TYPE_POINT]
 
-func gen(points: Array[Foliage3DPoint] = []) -> Array:
+func _generate(input: Array[Foliage3DPoint]) -> Array:
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed
 
-	var result: Array[Foliage3DPoint] = points.duplicate()
+	var result: Array[Foliage3DPoint] = input.duplicate()
 
 	if offset_min != Vector3.ZERO or offset_max != Vector3.ZERO:
 		for i in range(result.size()):
@@ -45,9 +62,14 @@ func gen(points: Array[Foliage3DPoint] = []) -> Array:
 			var transform = result[i].transform
 			if rotation_absolute:
 				transform.basis = Basis()
-			transform.basis = transform.basis.rotated(Vector3(1, 0, 0), deg_to_rad(rng.randf_range(rotation_min.x, rotation_max.x)))
-			transform.basis = transform.basis.rotated(Vector3(0, 1, 0), deg_to_rad(rng.randf_range(rotation_min.y, rotation_max.y)))
-			transform.basis = transform.basis.rotated(Vector3(0, 0, 1), deg_to_rad(rng.randf_range(rotation_min.z, rotation_max.z)))
+			transform.basis = transform.basis * Basis.from_euler(Vector3(
+				deg_to_rad(rng.randf_range(rotation_min.x, rotation_max.x)),
+				deg_to_rad(rng.randf_range(rotation_min.y, rotation_max.y)),
+				deg_to_rad(rng.randf_range(rotation_min.z, rotation_max.z))
+			))
+			#transform.basis.x = transform.basis.x.rotated(Vector3(1, 0, 0), ))
+			#transform.basis.y = transform.basis.y.rotated(Vector3(0, 1, 0), )
+			#transform.basis.z = transform.basis.z.rotated(Vector3(0, 0, 1), )
 			result[i].transform = transform
 
 	if not scale_min.is_equal_approx(scale_max):
@@ -63,6 +85,3 @@ func gen(points: Array[Foliage3DPoint] = []) -> Array:
 			result[i].transform = transform
 
 	return [result]
-
-static func node_name():
-	return  "Transform"

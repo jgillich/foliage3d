@@ -1,93 +1,51 @@
 @tool
-class_name FoliageSurfaceSampler extends FoliageNode
+class_name Foliage3DSurfaceSampler extends Foliage3DNode
 
-var spacing = 10.0
-var point_size: Vector3 = Vector3(1, 1, 1)
-var calculate_density: bool = true
-var seed: int
+@export var spacing: float = 10.0:
+	set(value):
+		spacing = value
+		changed.emit()
 
-func _init(props: Dictionary = {}) -> void:
-	title = node_name()
-	create_port("", "", Type.POINT, false, true)
-	create_port("spacing", "Spacing", Type.FLOAT, false, false, 0.001)
-	create_port("point_size", "Size", Type.VECTOR3, false, false)
-	create_port("calculate_density", "Calculate Density", Type.BOOL, false, false)
-	create_port("seed", "Seed", Type.INT, false, false)
-	super(props)
+@export var point_extents: Vector3 = Vector3(1, 1, 1):
+	set(value):
+		point_extents = value
+		changed.emit()
 
-func gen() -> Array:
+@export var seed: int:
+	set(value):
+		seed = value
+		changed.emit()
+
+func get_inputs() -> Array[int]:
+	return []
+
+func get_outputs() -> Array[int]:
+	return [TYPE_POINT]
+
+func _generate() -> Array:
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed
 
 	var points: Array[Foliage3DPoint]
-	if foliage.shape is BoxShape3D:
-		var size = foliage.shape.size
-		var x = -size.x/2
-		while x < size.x/2:
-			x += spacing/2
-			var z = -size.z/2
-			while z < size.z/2:
-				z += spacing/2
-				var offset = Vector3(rng.randf_range(-spacing/4, spacing/4), 0, rng.randf_range(-spacing/4, spacing/4))
-				var position = Vector3(x, size.y/2, z) + foliage.global_position
-				var point = Foliage3DPoint.new()
-				point.transform = Transform3D(Basis(), position + offset)
-				point.size = point_size
-				points.append(point)
-	elif foliage.shape is SphereShape3D:
-		var radius = foliage.shape.radius
-		var phi = (1 + sqrt(5)) / 2
-		var n = radius * radius / spacing
-		for k in range(1, n + 1):
-			var r = sqrt(k - 0.5) / sqrt(n - 1 / 2)
-			var theta = k * 2 * PI / phi ** 2
-			var offset = Vector3(rng.randf_range(-spacing/4, spacing/4), 0, rng.randf_range(-spacing/4, spacing/4))
-			var position = offset + Vector3(r * cos(theta), 0, r * sin(theta)) * radius
-			var point = Foliage3DPoint.new()
-			point.transform = Transform3D(Basis(), position + foliage.global_position + Vector3(0, radius, 0))
-			point.size = point_size
-			points.append(point)
-	else:
-		push_error("foliage: shape not implemented")
+	var size = bounds.aabb.size
+	var x = 0.0
+	while x < size.x:
+		x += spacing
+		var z = 0.0
+		while z < size.z:
+			z += spacing
+			var offset = Vector3(rng.randf_range(-spacing/2, spacing/2), 0, rng.randf_range(-spacing/2, spacing/2))
+			var position = Vector3(x, 0, z) + bounds.aabb.position + offset
+			position.y = get_height(position)
 
-	if points.size() == 0:
-		return [points]
+			if not bounds.contains(position):
+				continue
 
-	# TODO *very* slow with many points
-	if false and calculate_density:
-		var min_distance: float = 1 << 31
-		var max_distance: float
-		var distances: Array[float]
-		for i in range(points.size()):
-			distances.append(0)
-			var p1 = points[i]
-			var matches: int
-			for j in range(points.size()):
-				var p2 = points[j]
-				var distance = p1.transform.origin.distance_to(p2.transform.origin)
-				if distance < p1.size.length() * 2:
-					matches += 1
-					distances[i] += distance
-			distances[i] /= matches
-			min_distance = min(min_distance, distances[i])
-			max_distance = max(max_distance, distances[i])
+			var normal = get_normal(position)
+			var tangent = normal.cross(Vector3.UP).normalized()
+			var bitangent = tangent.cross(normal).normalized()
 
-		for i in range(distances.size()):
-			points[i].density = remap(distances[i], min_distance, max_distance, 0.0, 1.0)
+			var transform = Transform3D(Basis(tangent, normal, bitangent), position)
+			points.append(Foliage3DPoint.new(transform, point_extents))
 
-	for i in range(points.size()):
-		var transform = points[i].transform
-		transform.origin.y = foliage.terrain.data.get_height(transform.origin)
-		var scale = transform.basis.get_scale()
-		var normal = foliage.terrain.data.get_normal(transform.origin)
-		transform.basis.y = normal
-		transform.basis.z = -transform.basis.z.cross(normal)
-		transform.basis.x = -transform.basis.x.cross(normal)
-		transform.basis = transform.basis.orthonormalized().scaled(scale)
-		points[i].transform = transform
-
-	print_debug("sampled %d" % points.size())
 	return [points]
-
-static func node_name():
-	return  "SurfaceSampler"

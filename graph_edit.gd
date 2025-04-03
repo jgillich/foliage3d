@@ -1,22 +1,10 @@
 @tool
-class_name Foliage3DGraphEdit extends GraphEdit
+extends GraphEdit
 
 signal changed()
 signal mesh_xforms_added(region: Vector2i, mesh: int, xforms: Array[Vector3])
 
 @onready var node_popup: Window = preload("res://addons/foliage_3d/node_popup.tscn").instantiate()
-
-static var NODES = {
-	"Difference": Foliage3DDifference,
-	"Prune": Foliage3DPrune,
-	"SurfaceSampler": Foliage3DSurfaceSampler,
-	"Mesh": Foliage3DMesh,
-	"MeshID": Foliage3DMeshID,
-	"Transform": Foliage3DTransform,
-	"Filter": Foliage3DFilter,
-	"FilterPoint": Foliage3DFilterPoint,
-	"Slice": Foliage3DSlice,
-}
 
 var resource: Foliage3DGraph
 var terrain: Terrain3D
