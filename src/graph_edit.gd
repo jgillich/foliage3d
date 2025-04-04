@@ -98,10 +98,9 @@ func _on_connection_request(from: StringName, fport: int, to: StringName, tport:
 	save()
 	changed.emit()
 
-
 func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 	for node in nodes:
-		get_node(NodePath(node)).queue_free()
+		get_node(NodePath(node)).free()
 	save()
 	changed.emit()
 
