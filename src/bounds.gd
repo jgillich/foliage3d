@@ -37,7 +37,7 @@ func shape_contains(position: Vector3, shape: CollisionShape3D) -> bool:
 
 func get_aabb(position: Vector3, shape: Shape3D) -> AABB:
 	if shape is BoxShape3D:
-		return AABB(position, shape.extents * 2)
+		return AABB(position - shape.extents, shape.size)
 	elif shape is SphereShape3D:
 		var radius = Vector3(shape.radius, shape.radius, shape.radius)
 		return AABB(position - radius, radius * 2)
