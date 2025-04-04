@@ -80,7 +80,8 @@ func save():
 				dict[prop["name"]] = node.node.get(prop["name"])
 			resource.nodes.append(dict)
 
-	ResourceSaver.save(resource, resource.resource_path)
+	if not resource.resource_path.is_empty():
+		ResourceSaver.save(resource, resource.resource_path)
 
 func _on_node_selected(node):
 	EditorInterface.edit_resource(node.node)

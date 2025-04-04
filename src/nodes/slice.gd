@@ -20,7 +20,7 @@ func get_inputs() -> Array[int]:
 	return [TYPE_POINT]
 
 func get_outputs() -> Array[int]:
-	return [TYPE_POINT]
+	return [TYPE_POINT, TYPE_POINT]
 
 func _generate(input: Array[Foliage3DPoint]) -> Array:
 	var result = input.duplicate()
