@@ -67,9 +67,6 @@ func _generate(input: Array[Foliage3DPoint]) -> Array:
 				deg_to_rad(rng.randf_range(rotation_min.y, rotation_max.y)),
 				deg_to_rad(rng.randf_range(rotation_min.z, rotation_max.z))
 			))
-			#transform.basis.x = transform.basis.x.rotated(Vector3(1, 0, 0), ))
-			#transform.basis.y = transform.basis.y.rotated(Vector3(0, 1, 0), )
-			#transform.basis.z = transform.basis.z.rotated(Vector3(0, 0, 1), )
 			result[i].transform = transform
 
 	if not scale_min.is_equal_approx(scale_max):

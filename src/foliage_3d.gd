@@ -8,7 +8,6 @@ static var NODES = {
 	"Prune": Foliage3DPrune,
 	"SurfaceSampler": Foliage3DSurfaceSampler,
 	"MeshSpawner": Foliage3DMeshSpawner,
-	"TransformPoint": Foliage3DTransform,
 	"Transform": Foliage3DTransform,
 	"Filter": Foliage3DFilter,
 	"FilterPoint": Foliage3DFilterPoint,

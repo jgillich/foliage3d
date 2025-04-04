@@ -37,8 +37,10 @@ func _generate(input: Array[Foliage3DPoint]) -> Array:
 				rest.append(point)
 				continue
 		if rotation_min != Vector3.ZERO or rotation_max != Vector3.ZERO:
-			var deg = point.transform.basis.get_euler() * rad_to_deg(1)
-			if deg.clamp(vec_defaults(rotation_min, -360), vec_defaults(rotation_max, 360)) != deg and deg.clamp(rotation_max * -1, rotation_min * -1) != deg:
+			var rad_min = vec_defaults(rotation_min, 0.0) * deg_to_rad(1)
+			var rad_max = vec_defaults(rotation_max, 360.0) * deg_to_rad(1)
+			var rad = point.transform.basis.get_euler()
+			if not filter_rotation_vector(rad, rad_min, rad_max):
 				rest.append(point)
 				continue
 
@@ -46,9 +48,17 @@ func _generate(input: Array[Foliage3DPoint]) -> Array:
 
 	return [result, rest]
 
+func filter_rotation_vector(value: Vector3, min: Vector3, max: Vector3):
+	for axis in ["x", "y", "z"]:
+		if value[axis] < 0:
+			value[axis] *= -1
+		if value[axis] > max[axis] or value[axis] < min[axis]:
+			return false
+	return true
+
 func vec_defaults(vec: Vector3, default = INF) -> Vector3:
 	return Vector3(
-		vec.x if vec.x != 0 else default,
-		vec.y if vec.y != 0 else default,
-		vec.z if vec.z != 0 else default
+		vec.x if vec.x != 0.0 else default,
+		vec.y if vec.y != 0.0 else default,
+		vec.z if vec.z != 0.0 else default
 	)

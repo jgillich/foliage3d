@@ -25,7 +25,9 @@ func get_outputs() -> Array[int]:
 	return []
 
 func generate():
-	Thread.set_thread_safety_checks_enabled(false)
+	if OS.get_thread_caller_id() != OS.get_main_thread_id():
+		Thread.set_thread_safety_checks_enabled(false)
+
 	var time = Time.get_ticks_msec()
 
 	var args: Array
