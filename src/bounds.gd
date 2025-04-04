@@ -12,12 +12,10 @@ func set_shapes(p_shapes: Array[CollisionShape3D]):
 		if shape.shape == null:
 			continue
 		var shape_aabb = get_aabb(shape.global_position, shape.shape)
-		DebugDraw3D.draw_box(shape_aabb.position, Quaternion(), shape_aabb.size, Color.BLUE, false, 10.0)
 		if aabb.position == Vector3.ZERO:
 			aabb = shape_aabb
 		else:
 			aabb = aabb.merge(shape_aabb)
-	DebugDraw3D.draw_box(aabb.position, Quaternion(), aabb.size, Color.RED, false, 10.0)
 
 func contains(position: Vector3) -> bool:
 	for shape in shapes:
