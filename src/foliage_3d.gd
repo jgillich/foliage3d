@@ -1,4 +1,4 @@
-@tool
+@tool @icon("foliage3d.svg")
 class_name Foliage3D extends Node3D
 
 const Foliage3DGraphEdit := preload("graph_edit.gd")
@@ -99,26 +99,36 @@ func generate():
 
 func clear():
 	# https://terrain3d.readthedocs.io/en/latest/api/class_terrain3dregion.html#class-terrain3dregion-property-instances
-	var regions := terrain.data.get_regions_active()
-	for region in regions:
-		if not generated.has(region.location):
+	for region_loc in generated.keys():
+		var region = terrain.data.get_region(region_loc)
+		if region == null:
 			continue
+
 		region.modified = true
+		var region_generated = generated[region_loc]
 		var instances = region.instances
+
 		for mesh in instances.keys():
-			if not generated[region.location].has(mesh):
+			if not region_generated.has(mesh):
 				continue
-			var cells = instances[mesh]
-			for cell in cells.keys():
-				var arr = cells[cell]
+
+			var mesh_generated = region_generated[mesh]
+			var mesh_cells = instances[mesh]
+
+			for cell in mesh_cells.keys():
+				var arr = mesh_cells[cell]
 				if arr.is_empty():
 					continue
+
 				var xforms = arr[0]
-				instances[mesh][cell][0] = xforms.filter(func(xform: Transform3D):
-					return not generated[region.location][mesh].has(xform)
+				var filtered = xforms.filter(func(xform: Transform3D) -> bool:
+					return not mesh_generated.has(xform)
 				)
-				if instances[mesh][cell][0].is_empty():
-					instances[mesh].erase(cell)
+
+				if filtered.is_empty():
+					mesh_cells.erase(cell)
+				else:
+					arr[0] = filtered
 
 	generated = {}
 	terrain.instancer.update_mmis(true)
