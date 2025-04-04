@@ -47,7 +47,8 @@ func _generate(input: Array[Foliage3DPoint]) -> Array:
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed
 
-	var result: Array[Foliage3DPoint] = input.duplicate()
+	var result: Array[Foliage3DPoint]
+	result.assign(input.map(func(p): return p.duplicate()))
 
 	if offset_min != Vector3.ZERO or offset_max != Vector3.ZERO:
 		for i in range(result.size()):

@@ -14,9 +14,9 @@ var density: float
 
 var aabb: AABB
 
-func _init(p_transform: Transform3D, p_size: Vector3, p_density = 0.0):
+func _init(p_transform: Transform3D, p_extents: Vector3, p_density = 0.0):
 	transform = p_transform
-	extents = p_size
+	extents = p_extents
 	density = p_density
 
 func update_aabb():
@@ -25,3 +25,6 @@ func update_aabb():
 
 func intersects(point: Foliage3DPoint) -> bool:
 	return aabb.intersects(point.aabb)
+
+func duplicate() -> Foliage3DPoint:
+	return Foliage3DPoint.new(transform, extents)
