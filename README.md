@@ -45,13 +45,9 @@ Spawn meshes.
 
 ## Performance
 
-This plugin uses threads and should perform decently up to a certain size.
-A bounding box is drawn around all shapes, therfore it is recommended to only use shapes in close proximity to each other.
-Creating a very large number of points (e.g. to spawn grass) and comparing them with e.g. the *Difference* or *Prune* nodes will take considerable time.
-
-A C++ rewrite of core nodes has been put on hold because I am not an experienced C++ programmer
-and I am concerned that it will deter potential contributors.
-
+This plugin uses threads and should perform well up to a certain size, but you do
+need a good amount of RAM to generate large environments. When you run into problems,
+consider using multiple Foliage3D nodes to split up generation.
 
 ## Contributing
 
