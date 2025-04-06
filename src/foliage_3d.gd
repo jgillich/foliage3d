@@ -13,6 +13,7 @@ static var NODES = {
 	"FilterPoint": Foliage3DFilterPoint,
 	"Slice": Foliage3DSlice,
 	"ExtentsModifier": Foliage3DExtentsModifier,
+	"TexturePainter": Foliage3DTexturePainter,
 }
 
 signal graph_changed()

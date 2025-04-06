@@ -41,7 +41,14 @@ Remove points that overlap with self.
 
 #### MeshSpawner
 
-Spawn meshes.
+Spawn meshes. Mesh are imported if they do not exist in the current terrain.
+
+#### TexturePainter
+
+Pain texture. Textures are imported if they do not exist in the current terrain.
+This node is slow with many points, use extents modifier and prune to improve performance.
+
+**Note**: Painted textures are not cleared, previously painted textures are overwritten.
 
 ## Performance
 
