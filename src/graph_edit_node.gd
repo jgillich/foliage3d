@@ -6,12 +6,10 @@ signal mesh_xforms_added(region: Vector2i, mesh: int, xforms: Array[Vector3])
 
 var node: Foliage3DNode
 
-func _init(type: String, bounds: Foliage3DBounds, terrain: Terrain3D, props: Dictionary = {}):
+func _init(type: String, props: Dictionary = {}):
 	node = Foliage3D.NODES[type].new()
 	node.changed.connect(changed.emit)
 	node.mesh_xforms_added.connect(mesh_xforms_added.emit)
-	node.terrain3d = terrain
-	node.bounds = bounds
 	title = type
 
 	if not props.is_empty():

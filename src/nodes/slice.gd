@@ -22,7 +22,7 @@ func get_inputs() -> Array[int]:
 func get_outputs() -> Array[int]:
 	return [TYPE_POINT, TYPE_POINT]
 
-func _generate(input: Array[Foliage3DPoint]) -> Array:
+func _generate(ctx: Foliage3DExecutor.NodeContext, input: Array[Foliage3DPoint]) -> Array:
 	var result = input.duplicate()
 	if randomize:
 		var rng = RandomNumberGenerator.new()

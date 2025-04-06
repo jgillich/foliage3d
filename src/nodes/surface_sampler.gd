@@ -22,12 +22,12 @@ func get_inputs() -> Array[int]:
 func get_outputs() -> Array[int]:
 	return [TYPE_POINT]
 
-func _generate() -> Array:
+func _generate(ctx: Foliage3DExecutor.NodeContext) -> Array:
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed
 
 	var points: Array[Foliage3DPoint]
-	var size = bounds.aabb.size
+	var size = ctx.bounds.aabb.size
 	var x = 0.0
 	while x < size.x:
 		x += spacing
@@ -35,16 +35,16 @@ func _generate() -> Array:
 		while z < size.z:
 			z += spacing
 			var offset = Vector3(rng.randf_range(-spacing/2, spacing/2), 0, rng.randf_range(-spacing/2, spacing/2))
-			var position = Vector3(x, 0, z) + bounds.aabb.position + offset
-			position.y = get_height(position)
+			var position = Vector3(x, 0, z) + ctx.bounds.aabb.position + offset
+			position.y = ctx.with_terrain(func(t: Terrain3D): return t.data.get_height(position))
 
 			if is_nan(position.y):
 				position.y = 0
 
-			if not bounds.contains(position):
+			if not ctx.bounds.contains(position):
 				continue
 
-			var normal = get_normal(position)
+			var normal = ctx.with_terrain(func(t: Terrain3D): return t.data.get_normal(position))
 			if is_nan(normal.x):
 				normal = Vector3.UP
 

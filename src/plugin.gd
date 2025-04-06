@@ -11,7 +11,6 @@ var current: Foliage3D
 
 func _ready():
 	#add_inspector_plugin(inspector_plugin)
-
 	selection.selection_changed.connect(_selection_changed)
 	_selection_changed()
 

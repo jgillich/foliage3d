@@ -45,7 +45,7 @@ func _ready():
 	right_disconnects = true
 
 func create_node(type: String, params: Dictionary = {}) -> Foliage3DGraphEditNode:
-	var node = Foliage3DGraphEditNode.new(type, bounds, terrain, params)
+	var node = Foliage3DGraphEditNode.new(type, params)
 	node.changed.connect(func():
 		save()
 		changed.emit()
@@ -59,8 +59,11 @@ func generate():
 		if child is Foliage3DGraphEditNode:
 			nodes[str(child.name)] = child.node
 
-	var executor = Foliage3DExecutor.new()
-	executor.execute(nodes, connections)
+	var ctx = Foliage3DExecutor.Context.new(terrain, bounds)
+	var executor = Foliage3DExecutor.new(ctx, nodes, connections)
+
+	# TODO display "generating..." window with option to cancel
+	executor.execute()
 
 func save():
 	resource.nodes = []

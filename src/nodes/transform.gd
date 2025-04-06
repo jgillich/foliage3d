@@ -43,7 +43,7 @@ func get_inputs() -> Array[int]:
 func get_outputs() -> Array[int]:
 	return [TYPE_POINT]
 
-func _generate(input: Array[Foliage3DPoint]) -> Array:
+func _generate(ctx: Foliage3DExecutor.NodeContext, input: Array[Foliage3DPoint]) -> Array:
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed
 
